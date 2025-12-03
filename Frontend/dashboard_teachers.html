@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SAPCCA · Command Center</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Custom Charting Library (Mock-up uses D3 but we'll use a simple approach for single file) -->
+  <!-- We'll mock the charts using simple divs for single-file compliance -->
+
+  <!-- Tailwind Config -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
+            accent: { 400: "#a855f7", 500: "#8b5cf6" },
+            success: { 400: "#4ade80" },
+            warning: { 400: "#facc15" },
+            danger: { 400: "#f87171" },
+            ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
+          },
+          fontFamily: {
+            sans: ["Inter", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"]
+          },
+          animation: {
+            'scan': 'scan 3s linear infinite',
+            'pulse-glow-blue': 'pulseGlowBlue 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          },
+          keyframes: {
+            scan: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(200%)' }
+            },
+            pulseGlowBlue: {
+              '0%, 100%': { boxShadow: '0 0 20px rgba(14, 165, 233, 0.2)' },
+              '50%': { boxShadow: '0 0 10px rgba(14, 165, 233, 0.05)' }
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    body {
+      background-color: #050505;
+      color: #e6eef8;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* Mesh Background */
+    .mesh-bg {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+        background: 
+            radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%), 
+            radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+    }
+
+    /* Grid Overlay */
+    .grid-overlay {
+        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
+        background-image: 
+            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+    }
+
+    /* Glass Panels */
+    .glass {
+      background: rgba(17, 19, 23, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    
+    .glass-card {
+        background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        transition: all 0.2s ease;
+    }
+    .glass-card:hover {
+        border-color: rgba(56, 189, 248, 0.3);
+    }
+
+    /* Custom Scrollbar for dashboard lists */
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #272c34; border-radius: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background-color: transparent; }
+
+    /* Bar Chart Mockup Styling */
+    .bar {
+        transition: height 0.5s ease-out;
+    }
+    
+  </style>
+</head>
+
+<body class="flex min-h-screen">
+
+  <!-- Background Ambience -->
+  <div class="mesh-bg"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- SIDEBAR (Consistent Theme) -->
+  <aside class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0 z-20 sticky top-0 h-screen border-r border-white/5">
+    <!-- Top Section -->
+    <div class="p-8">
+      <!-- Logo -->
+      <div class="flex items-center gap-3 mb-12">
+        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer">
+          <i data-lucide="shield-check" class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
+          <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="space-y-2">
+        <a href="#" class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20">
+            <i data-lucide="layout-grid" class="w-5 h-5"></i>
+            <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="chat.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+          <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+          <span class="font-medium">Encrypted Chats</span>
+        </a>
+        <a href="friends.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+          <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+          <span class="font-medium">Friends</span>
+          <span class="ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+        </a>
+        <a href="settings.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+          <i data-lucide="settings" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+          <span class="font-medium">Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- Bottom Section -->
+    <div class="p-8 border-t border-white/5">
+        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+            <div class="relative">
+                <img src="https://robohash.org/teacher?set=set4&bgset=bg2" class="w-10 h-10 rounded-full ring-2 ring-brand-500/50">
+                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
+            </div>
+            <div class="overflow-hidden">
+                <p class="text-sm font-bold text-white truncate">Dr. Elara Vance</p>
+                <p class="text-xs text-gray-500 truncate font-mono">ROLE: ADMINISTRATOR</p>
+            </div>
+            <a href="welcome.html"><button class="ml-auto text-gray-500 hover:text-white transition-colors"><i data-lucide="log-out" class="w-4 h-4"></i></button></a>
+        </div>
+    </div>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="flex-1 min-w-0 flex flex-col relative z-10">
+    
+    <!-- Top Header -->
+    <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
+        <div class="flex items-center gap-4">
+            <div class="lg:hidden">
+                <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+            </div>
+            <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2 text-white">
+                <i data-lucide="layout-dashboard" class="w-5 h-5 text-brand-400"></i>
+                Command Center Overview
+            </h2>
+        </div>
+        <div class="flex gap-3">
+             <button class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-sm text-white font-bold transition-colors shadow-lg shadow-brand-500/20">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i> New Class
+             </button>
+        </div>
+    </header>
+
+    <!-- Dashboard Grid -->
+    <div class="p-6 lg:p-12 w-full mx-auto space-y-12">
+        
+        <!-- ROW 1: Key Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <!-- Metric Card 1: Active Classes -->
+            <div class="glass-card p-6 rounded-xl flex flex-col justify-between animate-pulse-glow-blue">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-400 font-medium">Active Classes</p>
+                    <i data-lucide="book-open-check" class="w-5 h-5 text-brand-400"></i>
+                </div>
+                <p class="text-4xl font-display font-bold mt-2 text-white">4</p>
+                <p class="text-xs text-gray-500 mt-1">Total operational modules.</p>
+            </div>
+
+            <!-- Metric Card 2: Enrolled Students -->
+            <div class="glass-card p-6 rounded-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-400 font-medium">Enrolled Students</p>
+                    <i data-lucide="users" class="w-5 h-5 text-accent-400"></i>
+                </div>
+                <p class="text-4xl font-display font-bold mt-2 text-white">145</p>
+                <p class="text-xs text-gray-500 mt-1">+12 this week.</p>
+            </div>
+
+            <!-- Metric Card 3: Pending Requests -->
+            <div class="glass-card p-6 rounded-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-400 font-medium">Pending Requests</p>
+                    <i data-lucide="mail-warning" class="w-5 h-5 text-warning-400"></i>
+                </div>
+                <p class="text-4xl font-display font-bold mt-2 text-white">3</p>
+                <p class="text-xs text-gray-500 mt-1">Awaiting access clearance.</p>
+            </div>
+
+            <!-- Metric Card 4: System Health -->
+            <div class="glass-card p-6 rounded-xl flex flex-col justify-between">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm text-gray-400 font-medium">System Health</p>
+                    <i data-lucide="activity" class="w-5 h-5 text-success-400"></i>
+                </div>
+                <p class="text-4xl font-display font-bold mt-2 text-white flex items-center gap-2">99.8%</p>
+                <p class="text-xs text-gray-500 mt-1">Uptime over 7 days.</p>
+            </div>
+        </div>
+        
+        <!-- ROW 2: Class Performance & Notifications -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Panel 1: Class Performance Metrics (Mock Bar Chart) -->
+            <div class="lg:col-span-2 glass-card p-6 rounded-xl">
+                <h3 class="text-xl font-display font-semibold mb-6">Class Performance Overview</h3>
+                <div class="h-64 flex items-end justify-around gap-2 p-4 border-b border-l border-white/5">
+                    <!-- Bar 1 -->
+                    <div class="flex flex-col items-center">
+                        <div data-height="85" class="bar bg-brand-500 w-8 rounded-t-sm shadow-md shadow-brand-500/30" style="height: 85%;"></div>
+                        <span class="text-xs text-gray-500 mt-2">CS 201</span>
+                    </div>
+                    <!-- Bar 2 -->
+                    <div class="flex flex-col items-center">
+                        <div data-height="60" class="bar bg-accent-500 w-8 rounded-t-sm shadow-md shadow-accent-500/30" style="height: 60%;"></div>
+                        <span class="text-xs text-gray-500 mt-2">DS 305</span>
+                    </div>
+                    <!-- Bar 3 -->
+                    <div class="flex flex-col items-center">
+                        <div data-height="92" class="bar bg-success-400 w-8 rounded-t-sm shadow-md shadow-success-400/30" style="height: 92%;"></div>
+                        <span class="text-xs text-gray-500 mt-2">AI 410</span>
+                    </div>
+                    <!-- Bar 4 -->
+                    <div class="flex flex-col items-center">
+                        <div data-height="78" class="bar bg-warning-400 w-8 rounded-t-sm shadow-md shadow-warning-400/30" style="height: 78%;"></div>
+                        <span class="text-xs text-gray-500 mt-2">Math 101</span>
+                    </div>
+                    <!-- Bar 5 -->
+                    <div class="flex flex-col items-center">
+                        <div data-height="55" class="bar bg-danger-400 w-8 rounded-t-sm shadow-md shadow-danger-400/30" style="height: 55%;"></div>
+                        <span class="text-xs text-gray-500 mt-2">CS 101</span>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4 text-center">Average Student Success Score (%)</p>
+            </div>
+            
+            <!-- Panel 2: System Notifications -->
+            <div class="lg:col-span-1 glass-card p-6 rounded-xl flex flex-col">
+                <h3 class="text-xl font-display font-semibold mb-4">System Alerts</h3>
+                <div class="space-y-4 custom-scrollbar overflow-y-auto max-h-80 pr-2">
+                    
+                    <!-- Alert Item 1 (Danger) -->
+                    <div class="flex gap-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <i data-lucide="plug-zap" class="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-sm font-medium text-white">Unauthorized Access Attempt</p>
+                            <p class="text-xs text-gray-400">User ID: F39-ALPHA locked out after 5 failed clearance attempts.</p>
+                            <span class="text-[10px] text-gray-600 font-mono mt-1 block">T-00:03:15 ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Item 2 (Warning) -->
+                    <div class="flex gap-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <i data-lucide="database" class="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-sm font-medium text-white">Database Latency Spike</p>
+                            <p class="text-xs text-gray-400">Data retrieval time increased by 30% during peak hours.</p>
+                            <span class="text-[10px] text-gray-600 font-mono mt-1 block">T-00:45:00 ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Item 3 (Info) -->
+                    <div class="flex gap-4 p-3 rounded-lg bg-brand-500/10 border border-brand-500/20">
+                        <i data-lucide="server" class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-sm font-medium text-white">Server Maintenance Complete</p>
+                            <p class="text-xs text-gray-400">System core update applied successfully. No reboot required.</p>
+                            <span class="text-[10px] text-gray-600 font-mono mt-1 block">T-01:22:00 ago</span>
+                        </div>
+                    </div>
+
+                    <!-- Alert Item 4 (Success) -->
+                    <div class="flex gap-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-success-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-sm font-medium text-white">New User Onboarded</p>
+                            <p class="text-xs text-gray-400">Student ID: 771-ZETA successfully integrated into the network.</p>
+                            <span class="text-[10px] text-gray-600 font-mono mt-1 block">T-02:10:00 ago</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 3: Class Management Table -->
+        <div class="glass-card p-6 rounded-xl">
+            <h3 class="text-xl font-display font-semibold mb-6 flex justify-between items-center">
+                Module Directory
+                <button class="text-xs text-brand-400 hover:text-brand-300 font-mono">VIEW ALL</button>
+            </h3>
+
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-white/10">
+                    <thead>
+                        <tr class="text-left text-xs font-mono text-gray-500 uppercase tracking-wider">
+                            <th class="py-3 px-4">Code</th>
+                            <th class="py-3 px-4">Title</th>
+                            <th class="py-3 px-4">Students</th>
+                            <th class="py-3 px-4">Performance</th>
+                            <th class="py-3 px-4">Status</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-white/5">
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="py-4 px-4 font-mono text-brand-400">AI-410</td>
+                            <td class="py-4 px-4 font-medium text-white">Advanced Neural Networks</td>
+                            <td class="py-4 px-4 text-gray-300">35</td>
+                            <td class="py-4 px-4">
+                                <span class="text-success-400 text-sm font-semibold">92%</span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-400">Running</span>
+                            </td>
+                            <td class="py-4 px-4 text-right">
+                                <button class="text-gray-400 hover:text-brand-400 p-1 rounded-md"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                <button class="text-gray-400 hover:text-warning-400 p-1 rounded-md"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="py-4 px-4 font-mono text-brand-400">CS-201</td>
+                            <td class="py-4 px-4 font-medium text-white">Quantum Data Structures</td>
+                            <td class="py-4 px-4 text-gray-300">42</td>
+                            <td class="py-4 px-4">
+                                <span class="text-brand-400 text-sm font-semibold">85%</span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-brand-500/10 text-brand-400">Active</span>
+                            </td>
+                            <td class="py-4 px-4 text-right">
+                                <button class="text-gray-400 hover:text-brand-400 p-1 rounded-md"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                <button class="text-gray-400 hover:text-warning-400 p-1 rounded-md"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="py-4 px-4 font-mono text-brand-400">DS-305</td>
+                            <td class="py-4 px-4 font-medium text-white">Predictive Modeling</td>
+                            <td class="py-4 px-4 text-gray-300">28</td>
+                            <td class="py-4 px-4">
+                                <span class="text-accent-400 text-sm font-semibold">60%</span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-red-500/10 text-red-400">Review</span>
+                            </td>
+                            <td class="py-4 px-4 text-right">
+                                <button class="text-gray-400 hover:text-brand-400 p-1 rounded-md"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                <button class="text-gray-400 hover:text-warning-400 p-1 rounded-md"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ROW 4: Quick Actions and System Logs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+            <!-- Panel 3: Quick Actions -->
+            <div class="glass-card p-6 rounded-xl">
+                <h3 class="text-xl font-display font-semibold mb-6">Quick Command Access</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-brand-500/10 border border-white/5 hover:border-brand-500/20 transition-all group">
+                        <i data-lucide="user-plus" class="w-6 h-6 text-brand-400 group-hover:text-brand-300"></i>
+                        <span class="mt-2 text-sm font-medium text-white">Enroll Student</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-accent-500/10 border border-white/5 hover:border-accent-500/20 transition-all group">
+                        <i data-lucide="file-text" class="w-6 h-6 text-accent-400 group-hover:text-accent-300"></i>
+                        <span class="mt-2 text-sm font-medium text-white">Generate Report</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-warning-500/10 border border-white/5 hover:border-warning-500/20 transition-all group">
+                        <i data-lucide="alert-triangle" class="w-6 h-6 text-warning-400 group-hover:text-warning-300"></i>
+                        <span class="mt-2 text-sm font-medium text-white">Broadcast Alert</span>
+                    </button>
+                    <button class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 transition-all group">
+                        <i data-lucide="lock" class="w-6 h-6 text-danger-400 group-hover:text-danger-300"></i>
+                        <span class="mt-2 text-sm font-medium text-white">Revoke Access</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel 4: Live Activity Feed -->
+            <div class="glass-card p-6 rounded-xl">
+                <h3 class="text-xl font-display font-semibold mb-4">Live Activity Feed</h3>
+                <div class="space-y-4 custom-scrollbar overflow-y-auto max-h-72 pr-2">
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-emerald-400">12:35:01</span> User 45B-9 submitted <span class="text-white">CS-201</span> assignment.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-brand-400">12:34:22</span> Dr. Vance accessed <span class="text-white">DS-305</span> protocol files.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-red-400">12:33:55</span> System attempted <span class="text-white">auto-patch</span> (error: 403).
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-yellow-400">12:33:10</span> New <span class="text-white">message alert</span> in Encrypted Chat.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-emerald-400">12:32:05</span> User 884-A2 successfully authenticated.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse flex-shrink-0"></div>
+                        <p class="text-sm font-mono text-gray-300 truncate">
+                            <span class="text-brand-400">12:31:40</span> Module <span class="text-white">Math-101</span> updated by Professor K.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    lucide.createIcons();
+    
+    // Function to calculate bar heights dynamically (for better visual effect)
+    function setBarHeights() {
+        const bars = document.querySelectorAll('.bar');
+        const maxHeight = 256; // Max height in pixels for the container (h-64)
+
+        bars.forEach(bar => {
+            const percentage = parseInt(bar.dataset.height);
+            const heightPx = (percentage / 100) * maxHeight;
+            bar.style.height = `${heightPx}px`;
+        });
+    }
+
+    window.onload = setBarHeights;
+
+  </script>
+
+</body>
+</html>

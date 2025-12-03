@@ -1,0 +1,17 @@
+/* OTP Input Box Styling - ADD THIS TO welcome.html */
+
+/* Add these CSS rules before the closing </style> tag in welcome.html (around line 206) */
+
+        /* OTP Input Box Styling */
+        .otp-box {
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .otp-box:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.1);
+            outline: none;
+        }

@@ -1,0 +1,331 @@
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from database import db
+from models import User, FriendRequest # Assuming FriendRequest model exists
+
+friends_bp = Blueprint("friends", __name__)
+
+# --- Helper function for fetching the current user's ID ---
+def get_current_user_id_str():
+    # Since we set the identity to str(user.id) in login, we retrieve it as a string
+    return get_jwt_identity()
+
+# -----------------------------------------------------------------
+# 1. SEND REQUEST (Ensures new requests have status='pending')
+# -----------------------------------------------------------------
+@friends_bp.post("/request")
+@jwt_required()
+def send_friend_request():
+    sender_id = get_current_user_id_str()
+    
+    # Use try-except for robust JSON parsing
+    try:
+        data = request.json
+        receiver_id = str(data["receiver_id"])
+    except (TypeError, KeyError):
+        return jsonify({"error": "Invalid or missing 'receiver_id' in request body"}), 400
+
+    # Basic checks
+    if sender_id == receiver_id:
+        return jsonify({"error": "Cannot send request to self"}), 400
+
+    # Ensure receiver exists
+    receiver = User.query.get(receiver_id)
+    if not receiver:
+        return jsonify({"error": "Receiver not found"}), 404
+
+    # Check for existing request (pending, accepted, or reversed)
+    # A single query checks for any relationship/request between the two users
+    existing_request = FriendRequest.query.filter(
+        ((FriendRequest.sender_id == sender_id) & (FriendRequest.receiver_id == receiver_id)) |
+        ((FriendRequest.sender_id == receiver_id) & (FriendRequest.receiver_id == sender_id))
+    ).first()
+
+    if existing_request:
+        status_message = existing_request.status
+        if status_message == 'pending':
+            return jsonify({"message": "Friend request already pending"}), 409
+        elif status_message == 'accepted':
+            return jsonify({"message": "Users are already friends"}), 409
+        # For rejected status, you might allow resending, but for simplicity, we prevent duplicate records.
+        return jsonify({"message": f"Existing relationship found with status: {status_message}"}), 409
+
+
+    # Create and commit new request with default status 'pending'
+    # NOTE: The FriendRequest model must define status as a column with 'pending' as default.
+    new_request = FriendRequest(sender_id=sender_id, receiver_id=receiver_id, status='pending')
+    db.session.add(new_request)
+    db.session.commit()
+
+    return jsonify({"message": "Friend request sent"}), 201
+
+# -----------------------------------------------------------------
+# 2. VIEW PENDING REQUESTS (Only shows requests with status='pending')
+# -----------------------------------------------------------------
+@friends_bp.get("/pending")
+@jwt_required()
+def get_pending_requests():
+    user_id = get_current_user_id_str()
+    
+    # Filter for requests where user is the receiver AND status is 'pending'
+    pending_requests = FriendRequest.query.filter_by(receiver_id=user_id, status='pending').all()
+    
+    requests_list = []
+    for req in pending_requests:
+        sender = User.query.get(req.sender_id)
+        requests_list.append({
+            "request_id": req.id,
+            "sender_id": req.sender_id,
+            "sender_name": sender.display_name if sender else "Unknown User"
+        })
+
+    return jsonify({"requests": requests_list})
+
+# -----------------------------------------------------------------
+# 3. REJECT REQUEST (Sets status to 'rejected' or deletes the record)
+# -----------------------------------------------------------------
+@friends_bp.post("/reject")
+@jwt_required()
+def reject_friend_request():
+    user_id = get_current_user_id_str()
+    
+    try:
+        request_id = request.json["request_id"]
+    except (TypeError, KeyError):
+        return jsonify({"error": "Missing 'request_id' in request body"}), 400
+
+    request_to_reject = FriendRequest.query.get(request_id)
+
+    if not request_to_reject:
+        return jsonify({"error": "Friend request not found"}), 404
+
+    # Security check: Ensure the current user is the intended receiver
+    if request_to_reject.receiver_id != user_id:
+        return jsonify({"error": "Unauthorized action on this request"}), 403
+    
+    # ⚠️ OPTION A: Set status to 'rejected' (Good for history/preventing resend)
+    # request_to_reject.status = 'rejected'
+    
+    # ⚠️ OPTION B: Delete the request (Simpler implementation)
+    db.session.delete(request_to_reject)
+    
+    db.session.commit()
+
+    return jsonify({"message": "Friend request rejected"}), 200
+
+# -----------------------------------------------------------------
+# 4. ACCEPT REQUEST (Sets status to 'accepted' and ideally creates Friendship)
+# -----------------------------------------------------------------
+@friends_bp.post("/accept")
+@jwt_required()
+def accept_friend_request():
+    user_id = get_current_user_id_str()
+    
+    try:
+        request_id = request.json["request_id"]
+    except (TypeError, KeyError):
+        return jsonify({"error": "Missing 'request_id' in request body"}), 400
+
+    request_to_accept = FriendRequest.query.get(request_id)
+
+    if not request_to_accept:
+        return jsonify({"error": "Friend request not found"}), 404
+
+    # Security check: Ensure the current user is the intended receiver
+    if request_to_accept.receiver_id != user_id:
+        return jsonify({"error": "Unauthorized action on this request"}), 403
+    
+    # Ensure the request is still pending
+    if request_to_accept.status != 'pending':
+        return jsonify({"error": f"Request is not pending (status: {request_to_accept.status})"}), 409
+
+    # 1. Update the FriendRequest status to 'accepted'
+    request_to_accept.status = 'accepted'
+    
+from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from database import db
+from models import User, FriendRequest # Assuming FriendRequest model exists
+
+friends_bp = Blueprint("friends", __name__)
+
+# --- Helper function for fetching the current user's ID ---
+def get_current_user_id():
+    # Return as int for DB operations
+    return int(get_jwt_identity())
+
+# -----------------------------------------------------------------
+# 1. SEND REQUEST (Ensures new requests have status='pending')
+# -----------------------------------------------------------------
+@friends_bp.post("/request")
+@jwt_required()
+def send_friend_request():
+    sender_id = get_current_user_id()
+    
+    # Use try-except for robust JSON parsing
+    try:
+        data = request.json
+        receiver_id = int(data["receiver_id"])
+    except (TypeError, KeyError, ValueError):
+        return jsonify({"error": "Invalid or missing 'receiver_id' in request body"}), 400
+
+    # Basic checks
+    if sender_id == receiver_id:
+        return jsonify({"error": "Cannot send request to self"}), 400
+
+    # Ensure receiver exists
+    receiver = User.query.get(receiver_id)
+    if not receiver:
+        return jsonify({"error": "Receiver not found"}), 404
+
+    # Check for existing request (pending, accepted, or reversed)
+    # A single query checks for any relationship/request between the two users
+    existing_request = FriendRequest.query.filter(
+        ((FriendRequest.sender_id == sender_id) & (FriendRequest.receiver_id == receiver_id)) |
+        ((FriendRequest.sender_id == receiver_id) & (FriendRequest.receiver_id == sender_id))
+    ).first()
+
+    if existing_request:
+        status_message = existing_request.status
+        if status_message == 'pending':
+            return jsonify({"message": "Friend request already pending"}), 409
+        elif status_message == 'accepted':
+            return jsonify({"message": "Users are already friends"}), 409
+        # For rejected status, you might allow resending, but for simplicity, we prevent duplicate records.
+        return jsonify({"message": f"Existing relationship found with status: {status_message}"}), 409
+
+
+    # Create and commit new request with default status 'pending'
+    # NOTE: The FriendRequest model must define status as a column with 'pending' as default.
+    new_request = FriendRequest(sender_id=sender_id, receiver_id=receiver_id, status='pending')
+    db.session.add(new_request)
+    db.session.commit()
+
+    return jsonify({"message": "Friend request sent"}), 201
+
+# -----------------------------------------------------------------
+# 2. VIEW PENDING REQUESTS (Only shows requests with status='pending')
+# -----------------------------------------------------------------
+@friends_bp.get("/pending")
+@jwt_required()
+def get_pending_requests():
+    user_id = get_current_user_id()
+    
+    # Filter for requests where user is the receiver AND status is 'pending'
+    pending_requests = FriendRequest.query.filter_by(receiver_id=user_id, status='pending').all()
+    
+    requests_list = []
+    for req in pending_requests:
+        sender = User.query.get(req.sender_id)
+        requests_list.append({
+            "request_id": req.id,
+            "sender_id": req.sender_id,
+            "sender_name": sender.display_name if sender else "Unknown User"
+        })
+
+    return jsonify({"requests": requests_list})
+
+# -----------------------------------------------------------------
+# 3. REJECT REQUEST (Sets status to 'rejected' or deletes the record)
+# -----------------------------------------------------------------
+@friends_bp.post("/reject")
+@jwt_required()
+def reject_friend_request():
+    user_id = get_current_user_id()
+    
+    try:
+        request_id = request.json["request_id"]
+    except (TypeError, KeyError):
+        return jsonify({"error": "Missing 'request_id' in request body"}), 400
+
+    request_to_reject = FriendRequest.query.get(request_id)
+
+    if not request_to_reject:
+        return jsonify({"error": "Friend request not found"}), 404
+
+    # Security check: Ensure the current user is the intended receiver
+    if request_to_reject.receiver_id != user_id:
+        return jsonify({"error": "Unauthorized action on this request"}), 403
+    
+    # ⚠️ OPTION A: Set status to 'rejected' (Good for history/preventing resend)
+    # request_to_reject.status = 'rejected'
+    
+    # ⚠️ OPTION B: Delete the request (Simpler implementation)
+    db.session.delete(request_to_reject)
+    
+    db.session.commit()
+
+    return jsonify({"message": "Friend request rejected"}), 200
+
+# -----------------------------------------------------------------
+# 4. ACCEPT REQUEST (Sets status to 'accepted' and ideally creates Friendship)
+# -----------------------------------------------------------------
+@friends_bp.post("/accept")
+@jwt_required()
+def accept_friend_request():
+    user_id = get_current_user_id()
+    
+    try:
+        request_id = request.json["request_id"]
+    except (TypeError, KeyError):
+        return jsonify({"error": "Missing 'request_id' in request body"}), 400
+
+    request_to_accept = FriendRequest.query.get(request_id)
+
+    if not request_to_accept:
+        return jsonify({"error": "Friend request not found"}), 404
+
+    # Security check: Ensure the current user is the intended receiver
+    if request_to_accept.receiver_id != user_id:
+        return jsonify({"error": "Unauthorized action on this request"}), 403
+    
+    # Ensure the request is still pending
+    if request_to_accept.status != 'pending':
+        return jsonify({"error": f"Request is not pending (status: {request_to_accept.status})"}), 409
+
+    # 1. Update the FriendRequest status to 'accepted'
+    request_to_accept.status = 'accepted'
+    
+    # 2. 🚨 NOTE: We still need a dedicated Friendship model/table here 
+    # to create the actual link that defines the friendship (since FriendRequest is just the request stage).
+    # Since we haven't created the Friendship model yet, we will rely on the 'accepted' status for now.
+    
+    db.session.commit()
+    
+    return jsonify({"message": "Friend request accepted"}), 200
+
+# -----------------------------------------------------------------
+# 5. LIST FRIENDS (Returns list of accepted friends)
+# -----------------------------------------------------------------
+@friends_bp.get("/list")
+@jwt_required()
+def get_friends_list():
+    user_id = get_current_user_id()
+
+    # Query for all accepted friend requests where the user is either sender or receiver
+    friends_query = FriendRequest.query.filter(
+        ((FriendRequest.sender_id == user_id) | (FriendRequest.receiver_id == user_id)) &
+        (FriendRequest.status == 'accepted')
+    ).all()
+
+    friends_data = []
+    
+    for req in friends_query:
+        # Determine who the friend is (the other person in the pair)
+        if req.sender_id == user_id:
+            friend_id = req.receiver_id
+        else:
+            friend_id = req.sender_id
+            
+        friend = User.query.get(friend_id)
+        
+        if friend:
+            friends_data.append({
+                "id": friend.id,
+                "display_name": friend.display_name,
+                "avatar_url": friend.avatar_url,
+                "email": friend.email # Optional: include if needed
+            })
+
+    return jsonify(friends_data), 200

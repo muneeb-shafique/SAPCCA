@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SAPCCA · Encrypted Comms</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet" />
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
+                        accent: { 400: "#a855f7", 500: "#8b5cf6" },
+                        ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"]
+                    },
+                    animation: {
+                        'scan': 'scan 3s linear infinite',
+                        'fade-in': 'fadeIn 0.3s ease-out forwards',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(200%)' }
+                        },
+                        fadeIn: {
+                            '0%': { opacity: 0, transform: 'translateY(10px)' },
+                            '100%': { opacity: 1, transform: 'translateY(0)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #e6eef8;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+            /* App-like feel */
+        }
+
+        /* Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+        }
+
+        /* Grid Overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        /* Glass Panels */
+        .glass {
+            background: rgba(17, 19, 23, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Message Bubbles */
+        .bubble-sent {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
+        }
+
+        .bubble-received {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+        }
+
+        /* Context Menu Actions */
+        .message-actions {
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+        }
+
+        .message-wrapper:hover .message-actions {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Layout Utilities */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            height: 100vh;
+        }
+
+        @media (max-width: 1024px) {
+            .layout-grid {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .chat-list-col {
+                width: 100%;
+                height: 100%;
+            }
+
+            .chat-window-col {
+                position: fixed;
+                inset: 0;
+                z-index: 50;
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+
+            .chat-window-col.active {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="flex h-screen w-screen overflow-hidden text-gray-200">
+
+    <!-- Background Ambience -->
+    <div class="mesh-bg"></div>
+    <div class="grid-overlay"></div>
+
+    <!-- 1. GLOBAL NAV SIDEBAR (Desktop Only - from Requests.html) -->
+    <aside
+        class="hidden lg:flex flex-col justify-between glass w-20 xl:w-72 flex-shrink-0 z-30 border-r border-white/5 transition-all duration-300">
+        <!-- Top Section -->
+        <div class="p-4 xl:p-8">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-12 justify-center xl:justify-start">
+                <div
+                    class="w-10 h-10 xl:w-12 xl:h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer flex-shrink-0">
+                    <i data-lucide="shield-check"
+                        class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
+                </div>
+                <div class="hidden xl:block">
+                    <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="dashboard_teachers.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group justify-center xl:justify-start"
+                    title="Dashboard">
+                    <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium hidden xl:block">Dashboard</span>
+                </a>
+
+                <!-- Active Tab -->
+                <a href="#"
+                    class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20 justify-center xl:justify-start"
+                    title="Chat">
+                    <i data-lucide="message-square" class="w-5 h-5"></i>
+                    <span class="font-medium hidden xl:block">Encrypted Chats</span>
+                </a>
+
+                <a href="friends.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group justify-center xl:justify-start"
+                    title="Network">
+                    <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium hidden xl:block">Friends</span>
+                    <span
+                        class="hidden xl:flex ml-auto bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.4)]">3</span>
+                </a>
+                <a href="settings.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group justify-center xl:justify-start"
+                    title="Settings">
+                    <i data-lucide="settings" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium hidden xl:block">Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Bottom Section (User) -->
+        <div class="p-4 xl:p-8 border-t border-white/5">
+            <div
+                class="flex items-center gap-3 p-2 xl:p-3 rounded-xl bg-white/5 border border-white/5 justify-center xl:justify-start">
+                <div class="relative flex-shrink-0">
+                    <img id="global-user-avatar" src="https://robohash.org/admin?set=set4&bgset=bg2"
+                        class="w-8 h-8 xl:w-10 xl:h-10 rounded-full ring-2 ring-brand-500/50 cursor-pointer">
+                    <span id="global-status-dot"
+                        class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
+
+                    <!-- Status Dropdown -->
+                    <div id="status-dropdown"
+                        class="absolute bottom-12 left-0 w-40 glass rounded-xl shadow-2xl border border-white/10 hidden z-50 overflow-hidden">
+                        <a href="#" data-status="Active"
+                            class="flex items-center px-4 py-2 text-sm text-white hover:bg-white/10"><span
+                                class="w-2 h-2 rounded-full bg-emerald-500 mr-2"></span> Active</a>
+                        <a href="#" data-status="Away"
+                            class="flex items-center px-4 py-2 text-sm text-white hover:bg-white/10"><span
+                                class="w-2 h-2 rounded-full bg-amber-500 mr-2"></span> Away</a>
+                        <a href="#" data-status="DND"
+                            class="flex items-center px-4 py-2 text-sm text-white hover:bg-white/10"><span
+                                class="w-2 h-2 rounded-full bg-red-500 mr-2"></span> DND</a>
+                        <a href="#" data-status="Offline"
+                            class="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-white/10"><span
+                                class="w-2 h-2 rounded-full bg-gray-500 mr-2"></span> Offline</a>
+                    </div>
+                </div>
+                <div class="overflow-hidden hidden xl:block">
+                    <p id="global-user-name" class="text-sm font-bold text-white truncate">Operator.X</p>
+                    <p class="text-xs text-gray-500 truncate font-mono">ID: SEC-884</p>
+                </div>
+                <a href="welcome.html"><button id="logout-btn"
+                        class="hidden xl:block ml-auto text-gray-500 hover:text-white transition-colors"><i
+                            data-lucide="log-out" class="w-4 h-4"></i></button></a>
+            </div>
+            <div class="text-[10px] text-center mt-2 text-gray-600 font-mono hidden xl:block">v3.2 SECURE</div>
+        </div>
+    </aside>
+
+    <!-- 2. MAIN APP AREA (Split View) -->
+    <main class="flex-1 layout-grid relative z-10">
+
+        <!-- LEFT COL: Chat List & Tools -->
+        <div id="chat-list-col"
+            class="chat-list-col flex flex-col border-r border-white/5 bg-[#050505]/40 backdrop-blur-sm">
+
+            <!-- Header -->
+            <div class="h-20 flex-shrink-0 px-6 flex items-center justify-between border-b border-white/5">
+                <h2 class="text-lg font-display font-bold text-white tracking-wide">Transmissions</h2>
+                <div class="flex gap-2">
+                    <button id="add-contact-btn"
+                        class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
+                        title="Add Contact">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
+                    <button id="view-profile-btn"
+                        class="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors lg:hidden">
+                        <i data-lucide="user" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="p-4 flex-shrink-0">
+                <div class="relative group">
+                    <i data-lucide="search"
+                        class="absolute left-3 top-3 w-4 h-4 text-gray-500 group-focus-within:text-brand-400 transition-colors"></i>
+                    <input id="search-input" type="text" placeholder="Search encrypted logs..."
+                        class="w-full bg-[#0a0a0c] border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-sm text-gray-300 placeholder-gray-600 focus:outline-none focus:border-brand-500/50 focus:ring-1 focus:ring-brand-500/50 transition-all">
+                </div>
+            </div>
+
+            <!-- Chat List -->
+            <div id="chat-list-container" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-1">
+                <!-- Dynamic Content -->
+            </div>
+
+            <!-- Mobile Footer (Status) -->
+            <div class="p-3 border-t border-white/5 text-center lg:hidden">
+                <span id="persistence-status" class="text-[10px] font-mono text-emerald-500">Local Cache Active</span>
+            </div>
+        </div>
+
+        <!-- RIGHT COL: Chat Window -->
+        <div id="chat-window-col" class="chat-window-col flex flex-col bg-[#050505] relative">
+            <div class="absolute inset-0 bg-grid-overlay opacity-50 pointer-events-none"></div>
+
+            <!-- A. Welcome / Empty State -->
+            <div id="welcome-container"
+                class="absolute inset-0 flex flex-col items-center justify-center z-10 bg-[#050505]/90 backdrop-blur-sm">
+                <div
+                    class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-brand-900/20 to-indigo-900/20 border border-white/5 flex items-center justify-center mb-6 relative overflow-hidden group">
+                    <div
+                        class="absolute inset-0 bg-brand-500/10 blur-xl group-hover:bg-brand-500/20 transition-all duration-700">
+                    </div>
+                    <i data-lucide="shield-alert" class="w-10 h-10 text-brand-400 relative z-10"></i>
+                </div>
+                <h2 class="text-2xl font-display font-bold text-white mb-2">Secure Link Established</h2>
+                <p class="text-gray-500 text-center max-w-sm">Select a transmission protocol from the sidebar to begin
+                    encrypted communication.</p>
+
+                <button id="mobile-menu-btn"
+                    class="mt-8 lg:hidden px-6 py-2 rounded-full border border-brand-500/30 text-brand-400 text-sm font-medium hover:bg-brand-500/10 transition-colors">
+                    Open Channel List
+                </button>
+            </div>
+
+            <!-- B. Active Chat Interface -->
+            <div id="active-chat-interface" class="flex flex-col h-full hidden relative z-20">
+
+                <!-- Header -->
+                <header
+                    class="h-20 flex-shrink-0 border-b border-white/5 bg-[#050505]/80 backdrop-blur-md flex items-center justify-between px-6 z-30">
+                    <div class="flex items-center gap-4">
+                        <button id="back-to-list-btn"
+                            class="lg:hidden w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center -ml-2">
+                            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                        </button>
+
+                        <div class="relative cursor-pointer" id="chat-header-info">
+                            <img id="chat-avatar" src="" class="w-10 h-10 rounded-full ring-2 ring-white/10">
+                            <span id="chat-status-dot"
+                                class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-gray-500 rounded-full ring-2 ring-black"></span>
+                        </div>
+
+                        <div class="cursor-pointer" id="chat-header-text">
+                            <h3 id="chat-title" class="font-display font-bold text-white leading-tight">User</h3>
+                            <p class="text-xs text-gray-500 font-mono">ID: <span id="chat-id-display">...</span></p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button data-action="search-chat"
+                            class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors hidden sm:block">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                        <button data-action="video-call"
+                            class="p-2 text-gray-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-colors">
+                            <i data-lucide="video" class="w-5 h-5"></i>
+                        </button>
+                        <button data-action="voice-call"
+                            class="p-2 text-gray-400 hover:text-brand-400 hover:bg-brand-500/10 rounded-lg transition-colors">
+                            <i data-lucide="phone" class="w-5 h-5"></i>
+                        </button>
+                        <button id="info-btn"
+                            class="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors">
+                            <i data-lucide="info" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Messages Area -->
+                <div id="messages-container" class="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 relative">
+                    <!-- New Message Badge -->
+                    <div id="new-message-badge"
+                        class="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-brand-600 text-white text-xs px-3 py-1.5 rounded-full shadow-lg cursor-pointer opacity-0 pointer-events-none transition-all duration-300 z-40 flex items-center gap-2">
+                        <i data-lucide="arrow-down" class="w-3 h-3"></i> New Transmission
+                    </div>
+                    <!-- Dynamic Messages -->
+                </div>
+
+                <!-- Input Area -->
+                <div class="p-4 flex-shrink-0 z-30">
+                    <form id="send-message-form"
+                        class="relative glass rounded-2xl p-2 flex items-end gap-2 border-white/10 ring-1 ring-white/5 focus-within:ring-brand-500/30 transition-all">
+
+                        <button type="button" data-action="attachment"
+                            class="p-3 text-gray-400 hover:text-white transition-colors rounded-xl hover:bg-white/5 flex-shrink-0">
+                            <i data-lucide="paperclip" class="w-5 h-5"></i>
+                        </button>
+
+                        <textarea id="new-message-input" rows="1" placeholder="Encrypted message..."
+                            class="w-full bg-transparent border-none text-white placeholder-gray-500 text-sm py-3 px-2 focus:ring-0 resize-none max-h-32 custom-scrollbar"></textarea>
+
+                        <button type="submit" id="send-button" disabled
+                            class="p-3 rounded-xl bg-brand-600 text-white shadow-lg hover:bg-brand-500 disabled:opacity-50 disabled:bg-gray-700 disabled:cursor-not-allowed transition-all transform hover:scale-105 active:scale-95 flex-shrink-0 w-11 h-11 flex items-center justify-center">
+                            <i id="send-icon" data-lucide="send" class="w-5 h-5 ml-0.5"></i>
+                            <i id="mic-icon" data-lucide="mic" class="w-5 h-5 hidden"></i>
+                        </button>
+
+                    </form>
+                    <div class="text-[10px] text-center text-gray-600 mt-2 font-mono">
+                        <i data-lucide="lock" class="w-3 h-3 inline mr-1"></i> End-to-end encrypted via SAPCCA Protocol
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- --- MODALS --- -->
+
+    <!-- 1. Add Contact Modal -->
+    <div id="add-contact-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Secure Handshake</h3>
+                <button data-action="close-add" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-contact-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-gray-500 mb-1">TARGET OPERATOR ID</label>
+                    <input type="text" id="contact-id-input" placeholder="e.g. SEC-994"
+                        class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white placeholder-gray-600 focus:border-brand-500 transition-colors font-mono uppercase">
+                </div>
+                <button type="submit"
+                    class="w-full py-3 bg-brand-600 hover:bg-brand-500 text-white font-bold rounded-lg shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all">Establish
+                    Link</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 2. Profile Modal -->
+    <div id="user-profile-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317] text-center">
+            <button data-action="close-profile" class="absolute top-4 right-4 text-gray-500 hover:text-white"><i
+                    data-lucide="x" class="w-5 h-5"></i></button>
+
+            <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-br from-brand-500 to-indigo-500 mx-auto mb-4">
+                <img id="profile-modal-avatar" src="" class="w-full h-full rounded-full bg-black object-cover">
+            </div>
+
+            <h3 class="text-xl font-display font-bold text-white mb-1" id="profile-modal-name">User Name</h3>
+            <p class="text-sm font-mono text-brand-400 mb-6" id="profile-modal-id">ID: ...</p>
+
+            <div class="grid grid-cols-2 gap-4 mb-6 text-left bg-white/5 p-4 rounded-xl border border-white/5">
+                <div>
+                    <p class="text-[10px] text-gray-500 uppercase">Status</p>
+                    <p class="text-sm text-white font-medium flex items-center gap-2 mt-1">
+                        <span id="profile-modal-status-dot" class="w-2 h-2 rounded-full bg-green-500"></span>
+                        <span id="profile-modal-status-text">Active</span>
+                    </p>
+                </div>
+                <div>
+                    <p class="text-[10px] text-gray-500 uppercase">Clearance</p>
+                    <p class="text-sm text-white font-medium mt-1" id="profile-modal-role">Level 4</p>
+                </div>
+            </div>
+
+            <form id="update-profile-form" class="space-y-3">
+                <input type="text" id="profile-name-input" placeholder="Update Display Name"
+                    class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white text-sm focus:border-brand-500 transition-colors">
+                <button type="submit"
+                    class="w-full py-2 bg-white/10 hover:bg-white/20 text-white font-medium rounded-lg transition-colors border border-white/5">Save
+                    Identity</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3. Channel Info Modal -->
+    <div id="channel-info-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-8 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-brand-500/20 bg-[#111317]">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-2xl font-display font-bold text-white">Subject Data</h3>
+                    <p class="text-xs text-brand-400 font-mono">ENCRYPTED // READ ONLY</p>
+                </div>
+                <button data-action="close-info" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="flex items-center gap-4 mb-6">
+                <img id="modal-info-avatar" src="" class="w-16 h-16 rounded-full ring-2 ring-white/10 bg-black">
+                <div>
+                    <h4 id="modal-contact-name-info" class="text-xl font-bold text-white">Name</h4>
+                    <p id="modal-contact-id" class="text-sm font-mono text-gray-500">ID</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">Connection Status</span>
+                    <span id="modal-contact-status" class="text-emerald-400 font-bold text-sm">Active</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                    <span class="text-gray-400 text-sm">Role Designation</span>
+                    <span id="modal-contact-role" class="text-indigo-400 font-bold text-sm">Analyst</span>
+                </div>
+                <div class="p-4 rounded-xl border border-dashed border-gray-700 text-center">
+                    <p class="text-xs text-gray-600 font-mono">SESSION HASH: <span
+                            class="text-gray-400 select-all">AE57-B9C0-D2F8-E1A4</span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Settings Modal -->
+    <div id="settings-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-lg p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">System Configuration</h3>
+                <button data-action="close-settings" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center justify-between">
+                    <div>
+                        <h4 class="text-white font-medium">Interface Theme</h4>
+                        <p class="text-xs text-gray-500">Toggle high-contrast simulation</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="theme-switch" class="sr-only peer" checked>
+                        <div
+                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
+                        </div>
+                    </label>
+                </div>
+
+                <div class="p-4 bg-white/5 rounded-xl border border-white/5">
+                    <h4 class="text-white font-medium mb-3">Notification Protocols</h4>
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-3 text-sm text-gray-400">
+                            <input type="checkbox" checked
+                                class="rounded border-gray-600 bg-gray-700 text-brand-500 focus:ring-brand-500">
+                            Desktop Alerts
+                        </label>
+                        <label class="flex items-center gap-3 text-sm text-gray-400">
+                            <input type="checkbox" checked
+                                class="rounded border-gray-600 bg-gray-700 text-brand-500 focus:ring-brand-500">
+                            Audio Feedback
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="notification-toast"
+        class="fixed bottom-6 right-6 z-50 p-4 rounded-xl shadow-2xl min-w-[320px] glass border-l-4 border-brand-500 flex items-center gap-4 transform translate-y-32 opacity-0 transition-all duration-500">
+        <div class="p-2 bg-brand-500/20 rounded-full text-brand-400">
+            <i id="toast-icon" data-lucide="info" class="w-5 h-5"></i>
+        </div>
+        <div>
+            <h4 class="text-white font-bold text-sm">Notification</h4>
+            <p id="toast-message" class="text-gray-400 text-xs">Message content...</p>
+        </div>
+    </div>
+
+
+    <!-- Core Logic -->
+    <script>
+        // --- STATE & DATA ---
+        const STORAGE_KEYS = { CHATS: 'nexus_chats_data_v2', USER: 'nexus_user_data_v2' };
+        const DEFAULT_AVATAR = "https://robohash.org/default?set=set4&bgset=bg2";
+
+        let currentUserId = 'SEC-' + crypto.randomUUID().substring(0, 4).toUpperCase();
+        let currentUserName = "Operator.X";
+        let currentUserStatus = 'Active';
+        let currentUserRole = 'Level 4 Security';
+        let activeChatId = null;
+        let mockChats = {};
+
+        // Default Contacts
+        const DEFAULT_MOCK_USERS = {
+            'SEC-884': { name: 'Operator.X', status: 'Active', role: 'Security' }, // Self
+            'SEC-994': { name: 'Dr. Vega', status: 'DND', role: 'Research Lead' },
+            'SEC-102': { name: 'Agent Z9', status: 'Away', role: 'Field Agent' },
+            'SYS-BOT': { name: 'System AI', status: 'Active', role: 'Automated' }
+        };
+
+        // --- DOM REFERENCES ---
+        const DOM = {
+            chatListCol: document.getElementById('chat-list-col'),
+            chatWindowCol: document.getElementById('chat-window-col'),
+            welcomeContainer: document.getElementById('welcome-container'),
+            activeChatInterface: document.getElementById('active-chat-interface'),
+            chatListContainer: document.getElementById('chat-list-container'),
+            messagesContainer: document.getElementById('messages-container'),
+            searchInput: document.getElementById('search-input'),
+            msgInput: document.getElementById('new-message-input'),
+            sendBtn: document.getElementById('send-button'),
+            micIcon: document.getElementById('mic-icon'),
+            sendIcon: document.getElementById('send-icon'),
+
+            // Modals
+            addContactModal: document.getElementById('add-contact-modal'),
+            userProfileModal: document.getElementById('user-profile-modal'),
+            channelInfoModal: document.getElementById('channel-info-modal'),
+            settingsModal: document.getElementById('settings-modal'),
+
+            // Headers
+            chatTitle: document.getElementById('chat-title'),
+            chatAvatar: document.getElementById('chat-avatar'),
+            chatStatusDot: document.getElementById('chat-status-dot'),
+            chatIdDisplay: document.getElementById('chat-id-display'),
+
+            // Global User
+            globalAvatar: document.getElementById('global-user-avatar'),
+            globalStatusDot: document.getElementById('global-status-dot'),
+            statusDropdown: document.getElementById('status-dropdown')
+        };
+
+        // --- UTILS ---
+        const getAvatar = (id) => `https://robohash.org/${id}?set=set4&bgset=bg2`;
+        const formatTime = (ts) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const getContact = (id) => {
+            if (id === currentUserId) return { name: currentUserName, status: currentUserStatus, role: currentUserRole };
+            return DEFAULT_MOCK_USERS[id] || { name: id, status: 'Offline', role: 'Unknown' };
+        };
+
+        // --- STATE MANAGEMENT ---
+        function loadState() {
+            try {
+                const u = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER));
+                if (u) { currentUserId = u.id; currentUserName = u.name; currentUserStatus = u.status; }
+
+                const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHATS));
+                if (c) {
+                    mockChats = c;
+                } else {
+                    // Init defaults
+                    mockChats = {
+                        'SEC-994': {
+                            contactId: 'SEC-994', unread: 2, messages: [
+                                { senderId: 'SEC-994', text: 'Dr. Vega: The quantum encryption keys are unstable.', timestamp: Date.now() - 3600000 },
+                                { senderId: 'SEC-994', text: 'I need authorization to reset the core.', timestamp: Date.now() - 3500000 }
+                            ]
+                        },
+                        'SYS-BOT': {
+                            contactId: 'SYS-BOT', unread: 0, messages: [
+                                { senderId: 'SYS-BOT', text: 'System Online. Secure channel active.', timestamp: Date.now() - 86400000 }
+                            ]
+                        }
+                    };
+                }
+            } catch (e) { console.error("Load Error", e); }
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify({ id: currentUserId, name: currentUserName, status: currentUserStatus }));
+            localStorage.setItem(STORAGE_KEYS.CHATS, JSON.stringify(mockChats));
+        }
+
+        // --- UI RENDERING ---
+
+        function renderGlobalUser() {
+            DOM.globalAvatar.src = getAvatar(currentUserId);
+            document.getElementById('global-user-name').textContent = currentUserName;
+            const color = currentUserStatus === 'Active' ? 'bg-emerald-500' : currentUserStatus === 'Away' ? 'bg-amber-500' : currentUserStatus === 'DND' ? 'bg-red-500' : 'bg-gray-500';
+            DOM.globalStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-[#111317] ${color}`;
+        }
+
+        function renderChatList() {
+            DOM.chatListContainer.innerHTML = '';
+            const filter = DOM.searchInput.value.toLowerCase();
+
+            Object.keys(mockChats).forEach(chatId => {
+                const chat = mockChats[chatId];
+                const contact = getContact(chat.contactId);
+
+                if (filter && !contact.name.toLowerCase().includes(filter)) return;
+
+                const lastMsg = chat.messages[chat.messages.length - 1];
+                const msgPreview = lastMsg ? (lastMsg.senderId === currentUserId ? 'You: ' : '') + lastMsg.text : 'No Data';
+                const isActive = chatId === activeChatId;
+                const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
+
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
+                el.onclick = () => openChat(chatId);
+
+                el.innerHTML = `
+                <div class="relative flex-shrink-0">
+                    <img src="${getAvatar(chat.contactId)}" class="w-12 h-12 rounded-full bg-black object-cover ring-2 ring-white/5">
+                    <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#111317] ${statusColor}"></div>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex justify-between items-baseline mb-0.5">
+                        <h4 class="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">${contact.name}</h4>
+                        <span class="text-[10px] text-gray-500 font-mono">${lastMsg ? formatTime(lastMsg.timestamp) : ''}</span>
+                    </div>
+                    <p class="text-xs text-gray-400 truncate">${msgPreview}</p>
+                </div>
+                ${chat.unread > 0 ? `<div class="w-5 h-5 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-brand-500/30">${chat.unread}</div>` : ''}
+            `;
+                DOM.chatListContainer.appendChild(el);
+            });
+        }
+
+        function renderMessages(chatId) {
+            DOM.messagesContainer.innerHTML = '';
+            const chat = mockChats[chatId];
+            if (!chat) return;
+
+            // Date divider logic could go here
+
+            chat.messages.forEach(msg => {
+                const isMe = msg.senderId === currentUserId;
+                const bubble = document.createElement('div');
+                bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`;
+
+                bubble.innerHTML = `
+                <div class="max-w-[75%] group relative">
+                    <!-- Actions -->
+                    <div class="message-actions absolute ${isMe ? 'right-full mr-2' : 'left-full ml-2'} top-1/2 -translate-y-1/2 flex gap-1 bg-black/50 backdrop-blur rounded-lg p-1 border border-white/10">
+                        <button class="p-1 hover:text-white text-gray-400"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a4 4 0 014 4v2a2 2 0 01-2 2h-6a2 2 0 01-2-2V6h-.01L3 10z"/></svg></button>
+                        <button class="p-1 hover:text-red-400 text-gray-400"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
+                    </div>
+
+                    <div class="p-3 rounded-2xl text-sm leading-relaxed relative z-10 ${isMe ? 'bubble-sent text-white rounded-tr-sm' : 'bubble-received text-gray-200 rounded-tl-sm'}">
+                        ${msg.text}
+                    </div>
+                    <div class="text-[10px] text-gray-500 mt-1 font-mono ${isMe ? 'text-right' : 'text-left'}">
+                        ${formatTime(msg.timestamp)}
+                    </div>
+                </div>
+            `;
+                DOM.messagesContainer.appendChild(bubble);
+            });
+
+            setTimeout(() => DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight, 10);
+        }
+
+        function openChat(chatId) {
+            activeChatId = chatId;
+            mockChats[chatId].unread = 0;
+            saveState();
+            renderChatList();
+
+            const contact = getContact(mockChats[chatId].contactId);
+
+            // Update Header
+            DOM.chatTitle.textContent = contact.name;
+            DOM.chatIdDisplay.textContent = mockChats[chatId].contactId;
+            DOM.chatAvatar.src = getAvatar(mockChats[chatId].contactId);
+
+            const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
+            DOM.chatStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black ${statusColor}`;
+
+            // Switch View
+            DOM.welcomeContainer.classList.add('hidden');
+            DOM.activeChatInterface.classList.remove('hidden');
+            DOM.activeChatInterface.classList.add('flex');
+
+            // Mobile Transition
+            DOM.chatWindowCol.classList.add('active');
+
+            renderMessages(chatId);
+        }
+
+        // --- ACTIONS ---
+
+        function sendMessage(e) {
+            e.preventDefault();
+            const text = DOM.msgInput.value.trim();
+            if (!text || !activeChatId) return;
+
+            mockChats[activeChatId].messages.push({
+                senderId: currentUserId,
+                text: text,
+                timestamp: Date.now()
+            });
+
+            DOM.msgInput.value = '';
+            DOM.sendBtn.disabled = true;
+            saveState();
+            renderMessages(activeChatId);
+            renderChatList();
+
+            // Simulate Retry/Network
+            showToast("Encrypted Packet Sent", "Delivery Confirmed");
+        }
+
+        // --- MODALS HELPER ---
+        function toggleModal(modal, show) {
+            if (show) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.remove('opacity-0');
+                    modal.firstElementChild.classList.remove('scale-95');
+                }, 10);
+            } else {
+                modal.classList.add('opacity-0');
+                modal.firstElementChild.classList.add('scale-95');
+                setTimeout(() => modal.classList.add('hidden'), 300);
+            }
+        }
+
+        function showToast(title, msg) {
+            const t = document.getElementById('notification-toast');
+            t.querySelector('h4').textContent = title;
+            t.querySelector('p').textContent = msg;
+            t.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
+        }
+
+        // --- EVENT LISTENERS ---
+
+        window.onload = () => {
+            lucide.createIcons();
+            loadState();
+            renderGlobalUser();
+            renderChatList();
+
+            // Input Handling
+            DOM.msgInput.addEventListener('input', (e) => {
+                const isEmpty = e.target.value.trim() === '';
+                DOM.sendBtn.disabled = isEmpty;
+                DOM.micIcon.classList.toggle('hidden', !isEmpty);
+                DOM.sendIcon.classList.toggle('hidden', isEmpty);
+                e.target.style.height = 'auto';
+                e.target.style.height = e.target.scrollHeight + 'px';
+            });
+
+            document.getElementById('send-message-form').addEventListener('submit', sendMessage);
+            DOM.searchInput.addEventListener('input', renderChatList);
+
+            // Mobile Nav
+            document.getElementById('mobile-menu-btn').onclick = () => {
+                // Logic to show sidebar is inherent in desktop view, 
+                // for mobile we just ensure the window isn't active
+                DOM.chatWindowCol.classList.remove('active');
+            };
+            document.getElementById('back-to-list-btn').onclick = () => {
+                DOM.chatWindowCol.classList.remove('active');
+                activeChatId = null;
+            };
+
+            // Modal Triggers
+            document.getElementById('add-contact-btn').onclick = () => toggleModal(DOM.addContactModal, true);
+            document.getElementById('view-profile-btn').onclick = () => {
+                // Populate Profile Modal
+                document.getElementById('profile-modal-name').textContent = currentUserName;
+                document.getElementById('profile-modal-id').textContent = currentUserId;
+                document.getElementById('profile-modal-avatar').src = getAvatar(currentUserId);
+                toggleModal(DOM.userProfileModal, true);
+            };
+            document.getElementById('info-btn').onclick = () => {
+                if (!activeChatId) return;
+                const c = getContact(mockChats[activeChatId].contactId);
+                document.getElementById('modal-contact-name-info').textContent = c.name;
+                document.getElementById('modal-contact-id').textContent = mockChats[activeChatId].contactId;
+                document.getElementById('modal-info-avatar').src = getAvatar(mockChats[activeChatId].contactId);
+                document.getElementById('modal-contact-status').textContent = c.status;
+                document.getElementById('modal-contact-role').textContent = c.role;
+                toggleModal(DOM.channelInfoModal, true);
+            };
+
+            // Close Buttons
+            document.querySelectorAll('button[data-action^="close"]').forEach(btn => {
+                btn.onclick = (e) => {
+                    const modal = e.target.closest('.fixed'); // Find parent modal
+                    toggleModal(modal, false);
+                }
+            });
+
+            // Add Contact Logic
+            document.getElementById('add-contact-form').onsubmit = (e) => {
+                e.preventDefault();
+                const id = document.getElementById('contact-id-input').value.toUpperCase();
+                if (!id) return;
+
+                if (mockChats[id]) { showToast("Error", "Channel already exists"); return; }
+
+                mockChats[id] = { contactId: id, unread: 0, messages: [] };
+                saveState();
+                renderChatList();
+                toggleModal(DOM.addContactModal, false);
+                showToast("Success", "Secure Channel Established");
+                document.getElementById('contact-id-input').value = '';
+            };
+
+            // Profile Avatar Click -> Dropdown
+            DOM.globalAvatar.onclick = (e) => {
+                e.stopPropagation();
+                DOM.statusDropdown.classList.toggle('hidden');
+            };
+            document.onclick = () => DOM.statusDropdown.classList.add('hidden');
+
+            // Status Change
+            document.querySelectorAll('#status-dropdown a').forEach(a => {
+                a.onclick = (e) => {
+                    e.preventDefault();
+                    currentUserStatus = e.target.closest('a').dataset.status;
+                    saveState();
+                    renderGlobalUser();
+                }
+            });
+        };
+    </script>
+</body>
+
+</html>

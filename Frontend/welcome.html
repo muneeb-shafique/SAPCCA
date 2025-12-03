@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAPCCA | Secure Campus Access</title>
+
+    <!-- Fonts: Inter for UI, Space Grotesk for Headings -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom Config for Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            400: '#38bdf8',
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            900: '#0c4a6e',
+                        },
+                        dark: {
+                            bg: '#050505',
+                            card: '#131316',
+                            border: '#27272a',
+                            text: '#a1a1aa'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Space Grotesk', 'sans-serif'],
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0', transform: 'translateY(10px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles for nuances Tailwind can't easily catch */
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            overflow-x: hidden;
+            /* Prevent horizontal scroll */
+        }
+
+        .txt-b {
+            color: #000000;
+        }
+
+        /* Glassmorphism utilities & Modernity on Main Card */
+        .glass-panel {
+            background: rgba(19, 19, 22, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transform: perspective(1000px) rotateY(0deg) skewY(0deg);
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .glass-panel:hover {
+            transform: perspective(1000px) rotateY(2deg) skewY(0.5deg);
+        }
+
+        @media (max-width: 768px) {
+            .glass-panel:hover {
+                transform: none;
+                /* Disable 3D effect on mobile */
+            }
+        }
+
+        /* Modern Box Input Styling */
+        .modern-input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 0.75rem;
+            /* rounded-xl */
+            padding: 1.5rem 1rem 0.5rem 1rem;
+            /* Top padding for label space */
+            color: white;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            height: 3.5rem;
+        }
+
+        .modern-input:focus {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: #38bdf8;
+            box-shadow: 0 0 0 1px #38bdf8, 0 0 20px rgba(56, 189, 248, 0.2);
+            outline: none;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .input-label {
+            position: absolute;
+            left: 1rem;
+            top: 1rem;
+            font-size: 0.95rem;
+            color: #71717a;
+            /* zinc-500 */
+            pointer-events: none;
+            transition: all 0.2s ease;
+        }
+
+        /* Float label when focused or has content */
+        .modern-input:focus+.input-label,
+        .modern-input:not(:placeholder-shown)+.input-label {
+            transform: translateY(-0.6rem) scale(0.75);
+            color: #38bdf8;
+            transform-origin: left top;
+        }
+
+        /* View Slider & Centering Logic */
+        .auth-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            /* CRITICAL: Enables scrolling if content exceeds height */
+
+            /* SCROLLBAR HIDING: Start */
+            -ms-overflow-style: none;
+            /* IE and Edge */
+            scrollbar-width: none;
+            /* Firefox */
+            /* SCROLLBAR HIDING: End */
+        }
+
+        /* SCROLLBAR HIDING for Webkit (Chrome, Safari, newer Edge) */
+        .auth-container::-webkit-scrollbar {
+            display: none;
+            width: 0px;
+            background: transparent;
+        }
+
+        /* The container for each view */
+        .view-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100%;
+            /* Ensures it covers auth-container */
+
+            /* Logic for centering content within the view */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem 3rem;
+            /* Adjusted vertical padding for scrolling content */
+
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(50px);
+        }
+
+        @media (max-width: 768px) {
+            .view-slide {
+                padding: 2rem 1.5rem;
+            }
+        }
+
+        .view-slide.active {
+            opacity: 1;
+            pointer-events: all;
+            transform: translateX(0);
+        }
+
+        .view-slide.exit-left {
+            transform: translateX(-50px);
+            opacity: 0;
+        }
+
+        /* Shadow for primary button (lift effect) */
+        .shadow-up {
+            box-shadow: 0 -10px 30px -10px rgba(14, 165, 233, 0.3), 0 0 20px rgba(14, 165, 233, 0.2);
+        }
+
+        /* Background Gradient Mesh */
+        .mesh-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
+                radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+            z-index: -1;
+            opacity: 0.4;
+        }
+    </style>
+</head>
+
+<body class="flex items-center justify-center min-h-screen relative selection:bg-brand-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-4"></div>
+
+    <!-- Background Elements -->
+    <div class="mesh-bg"></div>
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div
+            class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-purple-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob">
+        </div>
+        <div
+            class="absolute top-[-10%] right-[-10%] w-96 h-96 bg-blue-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000">
+        </div>
+        <div
+            class="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-indigo-900 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000">
+        </div>
+    </div>
+
+    <!-- Main Card - Height is now responsive min/max 90vh -->
+    <main
+        class="w-full max-w-[1200px] min-h-[90vh] max-h-[90vh] flex rounded-3xl glass-panel shadow-2xl overflow-hidden relative z-10 m-4 border border-white/10 ring-1 ring-white/5">
+
+        <!-- Left Side: Visuals & Info -->
+        <section
+            class="hidden lg:flex flex-col justify-between w-5/12 p-12 bg-black/50 border-r border-white/5 relative overflow-hidden backdrop-blur-sm">
+            <!-- Decorative Grid -->
+            <div class="absolute inset-0 opacity-10"
+                style="background-image: linear-gradient(#38bdf8 0.5px, transparent 0.5px), linear-gradient(90deg, #38bdf8 0.5px, transparent 0.5px); background-size: 40px 40px;">
+            </div>
+
+            <!-- Vignette -->
+            <div
+                class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none">
+            </div>
+
+            <!-- Logo Area -->
+            <div class="relative z-10 animate-fade-in">
+                <div class="flex items-center gap-3 mb-2">
+                    <div
+                        class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20 ring-1 ring-white/20">
+                        <i data-lucide="shield-check" class="text-white w-6 h-6"></i>
+                    </div>
+                    <span class="text-3xl font-display font-bold tracking-tighter text-white">SAPCCA</span>
+                </div>
+                <div class="flex items-center gap-2 pl-12">
+                    <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <p class="text-xs text-emerald-400 font-mono tracking-wider uppercase">Systems Online</p>
+                </div>
+            </div>
+
+            <!-- Feature Showcase -->
+            <div class="relative z-10 space-y-10 my-auto">
+                <div class="group">
+                    <h3 class="text-xl font-display font-semibold text-white mb-2 flex items-center gap-3">
+                        <span class="bg-brand-500/10 p-2 rounded-lg text-brand-400 ring-1 ring-brand-500/20"><i
+                                data-lucide="lock" class="w-5 h-5"></i></span>
+                        End-to-End Encrypted
+                    </h3>
+                    <p class="text-gray-400 text-sm leading-relaxed pl-12">AES-256 encryption ensures your academic
+                        discussions remain private and tamper-proof.</p>
+                </div>
+                <div class="group">
+                    <h3 class="text-xl font-display font-semibold text-white mb-2 flex items-center gap-3">
+                        <span class="bg-yellow-500/10 p-2 rounded-lg text-yellow-400 ring-1 ring-yellow-500/20"><i
+                                data-lucide="zap" class="w-5 h-5"></i></span>
+                        Real-time WebSocket
+                    </h3>
+                    <p class="text-gray-400 text-sm leading-relaxed pl-12">Latency under 200ms. Connect with faculty and
+                        peers instantly.</p>
+                </div>
+                <div class="group">
+                    <h3 class="text-xl font-display font-semibold text-white mb-2 flex items-center gap-3">
+                        <span class="bg-purple-500/10 p-2 rounded-lg text-purple-400 ring-1 ring-purple-500/20"><i
+                                data-lucide="bot" class="w-5 h-5"></i></span>
+                        AI Powered
+                    </h3>
+                    <p class="text-gray-400 text-sm leading-relaxed pl-12">Integrated sentiment analysis and automated
+                        spam detection.</p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="relative z-10 text-xs text-gray-500 flex justify-between items-center font-mono">
+                <span>© 2024 UNIVERSITY SYSTEM</span>
+                <div class="flex gap-4">
+                    <a href="#" class="hover:text-white transition-colors">PRIVACY</a>
+                    <a href="#" class="hover:text-white transition-colors">TERMS</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Side: Forms (Dynamic View Switching) -->
+        <section class="w-full lg:w-7/12 relative bg-[#0a0a0c]/80 backdrop-blur-xl">
+            <!-- This container enables vertical scrolling if the content is too tall -->
+            <div class="auth-container">
+
+                <!-- 1. LOGIN VIEW -->
+                <div id="view-login" class="view-slide active">
+                    <div class="max-w-sm w-full mx-auto p-4 lg:p-0">
+                        <div class="mb-10 text-center lg:text-left">
+                            <h1 class="text-4xl font-display font-bold text-white mb-3 tracking-tighter">Welcome back
+                            </h1>
+                            <p class="text-gray-400 text-lg">Enter your credentials to access the portal.</p>
+                        </div>
+
+                        <form onsubmit="handleLogin(event)" class="space-y-5">
+                            <div class="input-group">
+                                <input type="email" id="login-email" class="modern-input w-full" placeholder=" "
+                                    required>
+                                <label for="login-email" class="input-label">University Email</label>
+                            </div>
+
+                            <div class="input-group">
+                                <input type="password" id="login-pass" class="modern-input w-full" placeholder=" "
+                                    required>
+                                <label for="login-pass" class="input-label">Password</label>
+                                <button type="button"
+                                    class="absolute right-4 top-4 text-gray-500 hover:text-white transition-colors">
+                                    <i data-lucide="eye" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+
+                            <div class="flex items-center justify-between text-sm pt-2">
+                                <label class="flex items-center gap-2 cursor-pointer group select-none">
+                                    <input type="checkbox"
+                                        class="w-4 h-4 rounded border-gray-700 bg-white/5 checked:bg-brand-500 transition-colors focus:ring-offset-0 focus:ring-0">
+                                    <span class="text-gray-400 group-hover:text-white transition-colors">Remember
+                                        me</span>
+                                </label>
+                                <a href="#"
+                                    class="text-brand-400 hover:text-brand-300 transition-colors font-medium">Forgot
+                                    password?</a>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-4 rounded-xl hover:scale-[1.01] hover:shadow-up transition-all transform active:scale-[0.98] ring-1 ring-white/10 flex items-center justify-center gap-2 group mt-4">
+                                <span>Sign In</span>
+                                <i data-lucide="arrow-right"
+                                    class="w-5 h-5 group-hover:translate-x-1 transition-transform"></i>
+                            </button>
+                        </form>
+
+                        <div class="mt-8 text-center text-sm text-gray-500">
+                            Don't have an account?
+                            <button onclick="switchView('signup')"
+                                class="text-white font-semibold hover:underline decoration-brand-500 decoration-2 underline-offset-4 ml-1">Register
+                                now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. SIGNUP VIEW -->
+                <div id="view-signup" class="view-slide">
+                    <div class="max-w-sm w-full mx-auto p-4 lg:p-0">
+                        <button onclick="switchView('login')"
+                            class="mb-8 text-gray-500 hover:text-white flex items-center gap-2 text-sm transition-colors font-medium group">
+                            <div class="p-1 rounded-full bg-white/5 group-hover:bg-white/10 transition-colors">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                            </div>
+                            Back to Login
+                        </button>
+
+                        <div class="mb-8">
+                            <h1 class="text-3xl font-display font-bold text-white mb-2 tracking-tighter">Create Account
+                            </h1>
+                            <p class="text-gray-400">Join the secure campus network.</p>
+                        </div>
+
+                        <form onsubmit="handleSignup(event)" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="input-group mb-0">
+                                    <input type="text" id="signup-fname" class="modern-input w-full" placeholder=" "
+                                        required>
+                                    <label for="signup-fname" class="input-label">First Name</label>
+                                </div>
+                                <div class="input-group mb-0">
+                                    <input type="text" id="signup-lname" class="modern-input w-full" placeholder=" "
+                                        required>
+                                    <label for="signup-lname" class="input-label">Last Name</label>
+                                </div>
+                            </div>
+
+                            <div class="input-group">
+                                <input type="text" id="signup-roll" class="modern-input w-full" placeholder=" "
+                                    required>
+                                <label for="signup-roll" class="input-label">Roll No / Faculty ID</label>
+                            </div>
+
+                            <div class="input-group">
+                                <input type="email" id="signup-email" class="modern-input w-full" placeholder=" "
+                                    required>
+                                <label for="signup-email" class="input-label">University Email</label>
+                            </div>
+
+                            <div class="input-group">
+                                <input type="password" id="signup-pass" class="modern-input w-full" placeholder=" "
+                                    required>
+                                <label for="signup-pass" class="input-label">Create Password</label>
+                            </div>
+
+                            <!-- Role Selection -->
+                            <div class="grid grid-cols-2 gap-3 mb-2">
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="role" value="student" class="peer sr-only" checked>
+                                    <div
+                                        class="p-4 rounded-xl border border-white/10 bg-white/5 text-center text-sm text-gray-400 peer-checked:border-brand-500 peer-checked:text-white peer-checked:bg-brand-500/10 peer-checked:shadow-[0_0_15px_rgba(14,165,233,0.1)] transition-all hover:bg-white/10">
+                                        <i data-lucide="graduation-cap"
+                                            class="w-5 h-5 mx-auto mb-1 opacity-50 peer-checked:opacity-100"></i>
+                                        Student
+                                    </div>
+                                </label>
+                                <label class="cursor-pointer">
+                                    <input type="radio" name="role" value="faculty" class="peer sr-only">
+                                    <div
+                                        class="p-4 rounded-xl border border-white/10 bg-white/5 text-center text-sm text-gray-400 peer-checked:border-brand-500 peer-checked:text-white peer-checked:bg-brand-500/10 peer-checked:shadow-[0_0_15px_rgba(14,165,233,0.1)] transition-all hover:bg-white/10">
+                                        <i data-lucide="book-open"
+                                            class="w-5 h-5 mx-auto mb-1 opacity-50 peer-checked:opacity-100"></i>
+                                        Faculty
+                                    </div>
+                                </label>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-brand-600 text-white font-bold py-4 rounded-xl hover:bg-brand-500 transition-all transform active:scale-[0.98] shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2 mt-2">
+                                <span>Generate OTP</span>
+                                <i data-lucide="key" class="w-5 h-5"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- 3. OTP VIEW -->
+                <div id="view-otp" class="view-slide text-center">
+                    <div class="max-w-sm w-full mx-auto p-4 lg:p-0">
+                        <div
+                            class="w-20 h-20 bg-brand-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 text-brand-400 ring-1 ring-brand-500/20 shadow-[0_0_30px_rgba(14,165,233,0.15)]">
+                            <i data-lucide="mail-check" class="w-10 h-10"></i>
+                        </div>
+
+                        <h2 class="text-3xl font-display font-bold text-white mb-2 tracking-tighter">Verify Identity
+                        </h2>
+                        <p class="text-gray-400 mb-10">We sent a secure code to <span id="otp-email-display"
+                                class="text-white font-mono bg-white/5 px-2 py-1 rounded">user@uni.edu</span></p>
+
+                        <form onsubmit="handleVerify(event)">
+                            <div class="flex justify-center gap-3 mb-10" id="otp-inputs">
+                                <!-- Inputs generated by JS or static -->
+                                <input type="text" maxlength="1"
+                                    class="txt-b otp-box w-12 h-14 rounded-xl text-center text-3xl font-bold font-mono focus:outline-none"
+                                    autofocus>
+                                <input type="text" maxlength="1"
+                                    class="txt-b otp-box w-12 h-14 rounded-xl text-center text-3xl font-bold font-mono focus:outline-none">
+                                <input type="text" maxlength="1"
+                                    class="txt-b otp-box w-12 h-14 rounded-xl text-center text-3xl font-bold font-mono focus:outline-none">
+                                <input type="text" maxlength="1"
+                                    class="txt-b otp-box w-12 h-14 rounded-xl text-center text-3xl font-bold font-mono focus:outline-none">
+                                <input type="text" maxlength="1"
+                                    class="txt-b otp-box w-12 h-14 rounded-xl text-center text-3xl font-bold font-mono focus:outline-none">
+                            </div>
+
+                            <div id="loader" class="mb-6 hidden">
+                                <div class="h-2 w-full bg-dark-border rounded-full overflow-hidden">
+                                    <div class="h-2 w-1/3 bg-brand-500 animate-pulse"></div>
+                                </div>
+                                <p class="text-xs text-brand-400 mt-2 font-mono">Verifying hash...</p>
+                            </div>
+
+                            <button type="submit"
+                                class="w-full bg-gradient-to-r from-gray-900 to-black text-white font-bold py-4 rounded-xl hover:scale-[1.01] hover:shadow-up transition-all transform active:scale-[0.98] ring-1 ring-white/10 mb-6">
+                                Verify & Access
+                            </button>
+
+                            <button type="button" onclick="switchView('signup')"
+                                class="text-sm text-gray-500 hover:text-white transition-colors flex items-center justify-center gap-2 mx-auto">
+                                <i data-lucide="refresh-cw" class="w-3 h-3"></i>
+                                Resend Code (30s)
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <!-- JS Logic -->
+    <script>
+        // Initialize Icons
+        lucide.createIcons();
+
+        // View Management
+        function switchView(viewId) {
+            const views = document.querySelectorAll('.view-slide');
+            const target = document.getElementById('view-' + viewId);
+
+            // Handle Exit Animations
+            views.forEach(v => {
+                if (v.classList.contains('active')) {
+                    v.classList.remove('active');
+                    v.classList.add('exit-left');
+                    setTimeout(() => {
+                        v.classList.remove('exit-left');
+                    }, 500);
+                }
+            });
+
+            // Handle Entry
+            setTimeout(() => {
+                target.classList.add('active');
+
+                // Scroll to top of the new view on entry, just in case
+                document.querySelector('.auth-container').scrollTo({ top: 0, behavior: 'smooth' });
+
+                // Focus first input for UX
+                const firstInput = target.querySelector('input');
+                if (firstInput) firstInput.focus();
+            }, 50);
+        }
+
+        // Custom Toast Notification System
+        function showToast(title, message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const color = isError ? 'red' : 'brand';
+            const icon = isError ? 'x-circle' : 'check-circle';
+
+            toast.className = `glass-panel p-4 rounded-xl border-l-4 border-${color}-500 shadow-2xl flex items-start gap-3 w-80 transform translate-x-full transition-all duration-500`;
+            toast.innerHTML = `
+                <div class="bg-${color}-500/20 p-2 rounded-full text-${color}-400">
+                    <i data-lucide="${icon}" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-white text-sm">${title}</h4>
+                    <p class="text-xs text-gray-400 mt-1">${message}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Animate In
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full');
+            });
+
+            // Remove
+            setTimeout(() => {
+                toast.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => toast.remove(), 500);
+            }, 4000);
+        }
+
+        // Global variable to store email for OTP verification
+        let currentEmail = '';
+
+        // Login Handler (Real API)
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-pass').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i>`;
+            lucide.createIcons();
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store token and user info
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    showToast('Success', 'Login successful!');
+
+                    setTimeout(() => {
+                        window.location.href = '/chat.html';
+                    }, 1000);
+                } else {
+                    showToast('Error', data.error || 'Login failed', true);
+                    btn.innerHTML = originalText;
+                    lucide.createIcons();
+                }
+            } catch (error) {
+                showToast('Error', 'Network error. Please try again.', true);
+                btn.innerHTML = originalText;
+                lucide.createIcons();
+            }
+        }
+
+        // Signup Handler (Real API)
+        async function handleSignup(e) {
+            e.preventDefault();
+
+            const firstName = document.getElementById('signup-fname').value;
+            const lastName = document.getElementById('signup-lname').value;
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-pass').value;
+
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.classList.add('opacity-75', 'pointer-events-none');
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: `${firstName} ${lastName}`,
+                        email: email,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentEmail = email;
+                    document.getElementById('otp-email-display').textContent = email;
+                    showToast('OTP Generated', 'Check the terminal/console for your OTP code.');
+                    switchView('otp');
+                } else {
+                    showToast('Error', data.error || 'Registration failed', true);
+                }
+
+                btn.classList.remove('opacity-75', 'pointer-events-none');
+            } catch (error) {
+                showToast('Error', 'Network error. Please try again.', true);
+                btn.classList.remove('opacity-75', 'pointer-events-none');
+            }
+        }
+
+        // OTP Handler & Input Logic (Real API)
+        async function handleVerify(e) {
+            e.preventDefault();
+
+            // Collect OTP from inputs
+            const otpInputs = document.querySelectorAll('.otp-box');
+            const otp = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otp.length !== 5) {
+                showToast('Error', 'Please enter all 5 digits', true);
+                return;
+            }
+
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: currentEmail,
+                        otp: otp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Store token and user info
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    showToast('Verified', 'Account verified successfully!');
+                    showToast('Welcome', 'Redirecting to dashboard...');
+
+                    setTimeout(() => {
+                        window.location.href = '/chat.html';
+                    }, 1500);
+                } else {
+                    showToast('Error', data.error || 'OTP verification failed', true);
+                    loader.classList.add('hidden');
+                }
+            } catch (error) {
+                showToast('Error', 'Network error. Please try again.', true);
+                loader.classList.add('hidden');
+            }
+        }
+
+        // OTP Input Auto-Focus Logic
+        const otpInputs = document.querySelectorAll('.otp-box');
+        otpInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (input.value.length === 1 && index < otpInputs.length - 1) {
+                    otpInputs[index + 1].focus();
+                }
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && input.value.length === 0 && index > 0) {
+                    otpInputs[index - 1].focus();
+                }
+            });
+        });
+
+    </script>
+</body>
+
+</html>
