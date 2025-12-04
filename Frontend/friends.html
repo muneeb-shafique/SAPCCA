@@ -1,518 +1,627 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SAPCCA · Settings</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SAPCCA · Settings</title>
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet" />
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Tailwind Config -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
-            accent: { 400: "#a855f7", 500: "#8b5cf6" },
-            ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
-          },
-          fontFamily: {
-            sans: ["Inter", "sans-serif"],
-            display: ["Space Grotesk", "sans-serif"]
-          },
-          animation: {
-            'scan': 'scan 3s linear infinite',
-            'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-            'float': 'float 6s ease-in-out infinite',
-          },
-          keyframes: {
-            scan: {
-              '0%': { transform: 'translateX(-100%)' },
-              '100%': { transform: 'translateX(200%)' }
-            },
-            pulseGlow: {
-              '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(14, 165, 233, 0.2)' },
-              '50%': { opacity: .7, boxShadow: '0 0 10px rgba(14, 165, 233, 0.05)' }
-            },
-            float: {
-              '0%, 100%': { transform: 'translateY(0)' },
-              '50%': { transform: 'translateY(-5px)' }
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
+                        accent: { 400: "#a855f7", 500: "#8b5cf6" },
+                        ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"]
+                    },
+                    animation: {
+                        'scan': 'scan 3s linear infinite',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'float': 'float 6s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(200%)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(14, 165, 233, 0.2)' },
+                            '50%': { opacity: .7, boxShadow: '0 0 10px rgba(14, 165, 233, 0.05)' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-5px)' }
+                        }
+                    }
+                }
             }
-          }
+        };
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #e6eef8;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
         }
-      }
-    };
-  </script>
 
-  <style>
-    body {
-      background-color: #050505;
-      color: #e6eef8;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-    }
+        /* Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+        }
 
-    /* Mesh Background */
-    .mesh-bg {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-        background: 
-            radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%), 
-            radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-    }
+        /* Grid Overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
 
-    /* Grid Overlay */
-    .grid-overlay {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-        background-image: 
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-    }
+        /* Glass Panels */
+        .glass {
+            background: rgba(17, 19, 23, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
 
-    /* Glass Panels */
-    .glass {
-      background: rgba(17, 19, 23, 0.6);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-    }
-    
-    .glass-card {
-        background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .glass-card:hover {
-        border-color: rgba(56, 189, 248, 0.3);
-        transform: translateY(-2px);
-        box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.15);
-    }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
 
-    /* Scanner Effect */
-    .scanner-line {
-        position: absolute;
-        top: 0; left: 0; bottom: 0;
-        width: 40%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-        transform: skewX(-20deg) translateX(-150%);
-        transition: none;
-    }
-    .glass-card:hover .scanner-line {
-        animation: scan 1.5s ease-in-out infinite;
-    }
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(14, 165, 233, 0.15);
+        }
 
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0a0c; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        /* Scanner Effect */
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 40%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+            transform: skewX(-20deg) translateX(-150%);
+            transition: none;
+        }
 
-    /* Neon Badge */
-    .neon-badge {
-        box-shadow: 0 0 10px var(--badge-color);
-        border: 1px solid var(--badge-color);
-        color: var(--badge-text);
-        background: var(--badge-bg);
-    }
-    
-    /* Animation classes */
-    .slide-out-right {
-        animation: slideOutRight 0.4s forwards;
-    }
-    .slide-out-left {
-        animation: slideOutLeft 0.4s forwards;
-    }
+        .glass-card:hover .scanner-line {
+            animation: scan 1.5s ease-in-out infinite;
+        }
 
-    @keyframes slideOutRight {
-        to { transform: translateX(100%); opacity: 0; height: 0; margin: 0; padding: 0; }
-    }
-    @keyframes slideOutLeft {
-        to { transform: translateX(-100%); opacity: 0; height: 0; margin: 0; padding: 0; }
-    }
-  </style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0c;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Neon Badge */
+        .neon-badge {
+            box-shadow: 0 0 10px var(--badge-color);
+            border: 1px solid var(--badge-color);
+            color: var(--badge-text);
+            background: var(--badge-bg);
+        }
+
+        /* Animation classes */
+        .slide-out-right {
+            animation: slideOutRight 0.4s forwards;
+        }
+
+        .slide-out-left {
+            animation: slideOutLeft 0.4s forwards;
+        }
+
+        @keyframes slideOutRight {
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+                height: 0;
+                margin: 0;
+                padding: 0;
+            }
+        }
+
+        @keyframes slideOutLeft {
+            to {
+                transform: translateX(-100%);
+                opacity: 0;
+                height: 0;
+                margin: 0;
+                padding: 0;
+            }
+        }
+    </style>
 </head>
 
 <body class="flex min-h-screen">
 
-  <!-- Background Ambience -->
-  <div class="mesh-bg"></div>
-  <div class="grid-overlay"></div>
+    <!-- Background Ambience -->
+    <div class="mesh-bg"></div>
+    <div class="grid-overlay"></div>
 
-  <!-- SIDEBAR (Consistent with Settings.html) -->
-  <aside class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0 z-20">
-    <!-- Top Section -->
-    <div class="p-8">
-      <!-- Logo -->
-      <div class="flex items-center gap-3 mb-12">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer">
-          <i data-lucide="shield-check" class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
-        </div>
-        <div>
-          <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
-          <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
-        </div>
-      </div>
-
-      <!-- Navigation -->
-      <nav class="space-y-2">
-        <a href="dashboard_teachers.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-            <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-            <span class="font-medium">Dashboard</span>
-        </a>
-        <a href="chat.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-          <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-          <span class="font-medium">Encrypted Chats</span>
-        </a>
-        <a href="#" class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20">
-          <i data-lucide="users" class="w-5 h-5"></i>
-          <span class="font-medium">Friends</span>
-          <span class="ml-auto bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.4)]">3</span>
-        </a>
-        <a href="settings.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-          <i data-lucide="settings" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-          <span class="font-medium">Settings</span>
-        </a>
-      </nav>
-    </div>
-
-    <!-- Bottom Section -->
-    <div class="p-8 border-t border-white/5">
-        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-            <div class="relative">
-                <img src="https://robohash.org/admin?set=set4&bgset=bg2" class="w-10 h-10 rounded-full ring-2 ring-brand-500/50">
-                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
-            </div>
-            <div class="overflow-hidden">
-                <p class="text-sm font-bold text-white truncate">Operator.X</p>
-                <p class="text-xs text-gray-500 truncate font-mono">ID: 884-A2</p>
-            </div>
-            <a href="welcome.html"><button class="ml-auto text-gray-500 hover:text-white transition-colors"><i data-lucide="log-out" class="w-4 h-4"></i></button></a>
-        </div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
-    
-    <!-- Top Header -->
-    <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
-        <div class="flex items-center gap-4">
-            <div class="lg:hidden">
-                <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
-            </div>
-            <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2">
-                <span class="w-2 h-6 bg-brand-500 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.5)]"></span>
-                Inbound Requests
-            </h2>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <!-- Search -->
-            <div class="hidden md:flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10 focus-within:border-brand-500/50 focus-within:bg-white/10 transition-all w-64">
-                <i data-lucide="search" class="w-4 h-4 text-gray-500"></i>
-                <input type="text" placeholder="Scan Network ID..." class="bg-transparent border-none focus:outline-none text-sm text-white ml-2 w-full placeholder-gray-600 font-mono">
-            </div>
-            
-            <button class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors relative">
-                <i data-lucide="bell" class="w-5 h-5 text-gray-400"></i>
-                <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-            </button>
-        </div>
-    </header>
-
-    <!-- Stats Dashboard (Horizontal Scroll on mobile) -->
-    <div class="p-8 pb-0">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <!-- Stat Card 1 -->
-            <div class="glass-card p-6 rounded-2xl relative group">
-                <div class="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                    <i data-lucide="wifi" class="w-12 h-12 text-brand-500/20"></i>
+    <!-- SIDEBAR (Consistent with Settings.html) -->
+    <aside class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0 z-20">
+        <!-- Top Section -->
+        <div class="p-8">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-12">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer">
+                    <i data-lucide="shield-check"
+                        class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
                 </div>
-                <p class="text-sm text-gray-400 font-mono mb-1">NETWORK STRENGTH</p>
-                <h3 class="text-3xl font-display font-bold text-white flex items-baseline gap-2">
-                    98.4<span class="text-sm text-emerald-500">%</span>
-                </h3>
-                <div class="w-full bg-white/10 h-1 mt-4 rounded-full overflow-hidden">
-                    <div class="bg-brand-500 h-full w-[98%] shadow-[0_0_10px_rgba(14,165,233,0.5)]"></div>
+                <div>
+                    <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
                 </div>
             </div>
 
-            <!-- Stat Card 2 -->
-            <div class="glass-card p-6 rounded-2xl relative group">
-                <div class="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity">
-                    <i data-lucide="shield" class="w-12 h-12 text-purple-500/20"></i>
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="dashboard_teachers.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="chat.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Encrypted Chats</span>
+                </a>
+                <a href="#"
+                    class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20">
+                    <i data-lucide="users" class="w-5 h-5"></i>
+                    <span class="font-medium">Friends</span>
+                    <span
+                        class="ml-auto bg-brand-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(14,165,233,0.4)]">3</span>
+                </a>
+                <a href="settings.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="settings" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="p-8 border-t border-white/5">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                <div class="relative">
+                    <img id="global-user-avatar" src="https://robohash.org/admin?set=set4&bgset=bg2"
+                        class="w-10 h-10 rounded-full ring-2 ring-brand-500/50">
+                    <span
+                        class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
                 </div>
-                <p class="text-sm text-gray-400 font-mono mb-1">TRUST SCORE</p>
-                <h3 class="text-3xl font-display font-bold text-white flex items-baseline gap-2">
-                    AAA<span class="text-sm text-purple-400 font-normal">Tier</span>
-                </h3>
-                <p class="text-xs text-gray-500 mt-3">Advanced Encryption Standard Active</p>
+                <div class="overflow-hidden">
+                    <p id="global-user-name" class="text-sm font-bold text-white truncate">Loading...</p>
+                    <p class="text-xs text-gray-500 truncate font-mono user-id-display">ID: Loading...</p>
+                </div>
+                <a href="welcome.html"><button class="ml-auto text-gray-500 hover:text-white transition-colors"><i
+                            data-lucide="log-out" class="w-4 h-4"></i></button></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+
+        <!-- Top Header -->
+        <header
+            class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <div class="lg:hidden">
+                    <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                </div>
+                <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2">
+                    <span class="w-2 h-6 bg-brand-500 rounded-full shadow-[0_0_15px_rgba(14,165,233,0.5)]"></span>
+                    Inbound Requests
+                </h2>
             </div>
 
-            <!-- Stat Card 3 -->
-            <div class="glass-card p-6 rounded-2xl relative group border-brand-500/30 bg-brand-500/5">
-                <div class="absolute inset-0 bg-brand-500/5 blur-xl group-hover:bg-brand-500/10 transition-colors"></div>
-                <div class="relative z-10">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <p class="text-sm text-brand-300 font-mono mb-1">PENDING APPROVALS</p>
-                            <h3 class="text-3xl font-display font-bold text-white">3</h3>
+
+            <div class="flex items-center gap-4">
+                <!-- Send Friend Request Button -->
+                <button onclick="window.showAddFriendModal()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition-colors shadow-lg shadow-brand-500/20">
+                    <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Send Request</span>
+                </button>
+
+                <!-- Search -->
+                <div
+                    class="hidden md:flex items-center px-4 py-2 rounded-full bg-white/5 border border-white/10 focus-within:border-brand-500/50 focus-within:bg-white/10 transition-all w-64">
+                    <i data-lucide="search" class="w-4 h-4 text-gray-500"></i>
+                    <input type="text" placeholder="Scan Network ID..."
+                        class="bg-transparent border-none focus:outline-none text-sm text-white ml-2 w-full placeholder-gray-600 font-mono">
+                </div>
+
+                <button
+                    class="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors relative">
+                    <i data-lucide="bell" class="w-5 h-5 text-gray-400"></i>
+                    <span class="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Stats Dashboard (Horizontal Scroll on mobile) -->
+        <div class="p-8 pb-0">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Stat Card 1 -->
+                <div class="glass-card p-6 rounded-2xl relative group">
+                    <div class="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="wifi" class="w-12 h-12 text-brand-500/20"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-1">NETWORK STRENGTH</p>
+                    <h3 class="text-3xl font-display font-bold text-white flex items-baseline gap-2">
+                        98.4<span class="text-sm text-emerald-500">%</span>
+                    </h3>
+                    <div class="w-full bg-white/10 h-1 mt-4 rounded-full overflow-hidden">
+                        <div class="bg-brand-500 h-full w-[98%] shadow-[0_0_10px_rgba(14,165,233,0.5)]"></div>
+                    </div>
+                </div>
+
+                <!-- Stat Card 2 -->
+                <div class="glass-card p-6 rounded-2xl relative group">
+                    <div class="absolute top-0 right-0 p-4 opacity-50 group-hover:opacity-100 transition-opacity">
+                        <i data-lucide="shield" class="w-12 h-12 text-purple-500/20"></i>
+                    </div>
+                    <p class="text-sm text-gray-400 font-mono mb-1">TRUST SCORE</p>
+                    <h3 class="text-3xl font-display font-bold text-white flex items-baseline gap-2">
+                        AAA<span class="text-sm text-purple-400 font-normal">Tier</span>
+                    </h3>
+                    <p class="text-xs text-gray-500 mt-3">Advanced Encryption Standard Active</p>
+                </div>
+
+                <!-- Stat Card 3 -->
+                <div class="glass-card p-6 rounded-2xl relative group border-brand-500/30 bg-brand-500/5">
+                    <div class="absolute inset-0 bg-brand-500/5 blur-xl group-hover:bg-brand-500/10 transition-colors">
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="text-sm text-brand-300 font-mono mb-1">PENDING APPROVALS</p>
+                                <h3 class="text-3xl font-display font-bold text-white">3</h3>
+                            </div>
+                            <span class="flex h-3 w-3 relative">
+                                <span
+                                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                            </span>
                         </div>
-                        <span class="flex h-3 w-3 relative">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
-                        </span>
-                    </div>
-                    <div class="mt-4 flex gap-2">
-                        <button class="text-xs bg-brand-500 hover:bg-brand-400 text-white px-3 py-1.5 rounded-lg transition-colors font-medium shadow-lg shadow-brand-500/20">Review All</button>
+                        <div class="mt-4 flex gap-2">
+                            <button
+                                class="text-xs bg-brand-500 hover:bg-brand-400 text-white px-3 py-1.5 rounded-lg transition-colors font-medium shadow-lg shadow-brand-500/20">Review
+                                All</button>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Scrollable List Area -->
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+
+
+            <!-- Filter Tabs -->
+            <div class="flex items-center gap-6 mb-8 border-b border-white/5 pb-2">
+                <button data-tab="pending"
+                    class="text-white border-b-2 border-brand-500 pb-2 px-2 font-medium text-sm tracking-wide">Pending</button>
+                <button data-tab="outgoing"
+                    class="text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 pb-2 px-2 font-medium text-sm tracking-wide transition-all">Outgoing</button>
+                <button data-tab="ignored"
+                    class="text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 pb-2 px-2 font-medium text-sm tracking-wide transition-all">Ignored</button>
+
+                <div class="ml-auto flex gap-2 text-xs font-mono text-gray-500">
+                    <span class="flex items-center gap-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> High Priority
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Verified
+                    </span>
+                </div>
+            </div>
+
+
+            <!-- Request List Grid -->
+            <div class="space-y-4" id="request-list">
+
+                <!-- Card 1: High Priority -->
+                <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-yellow-500"
+                    id="req-1">
+                    <div class="scanner-line"></div> <!-- Decoration -->
+
+                    <!-- Avatar -->
+                    <div class="relative flex-shrink-0">
+                        <div
+                            class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-yellow-400 to-orange-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+                            <img src="https://robohash.org/prof_adams?set=set4&bgset=bg2"
+                                class="w-full h-full rounded-full bg-black object-cover">
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                            <i data-lucide="crown" class="w-3 h-3 text-yellow-400 fill-yellow-400"></i>
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-white font-display">Prof. Evelyn Adams</h3>
+                            <span
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 w-fit mx-auto md:mx-0">DEAN
+                                OF RESEARCH</span>
+                        </div>
+                        <p class="text-sm text-gray-400">Quantum Computing Dept · <span class="text-brand-400">92 Mutual
+                                Connections</span></p>
+                        <p class="text-xs text-gray-500 mt-1 font-mono">Incoming encrypted handshake request...</p>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button onclick="rejectRequest('req-1')"
+                            class="flex-1 md:flex-none py-2 px-4 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all text-sm font-medium">Ignore</button>
+                        <button onclick="acceptRequest('req-1')"
+                            class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-gradient-to-r from-brand-600 to-brand-500 hover:to-brand-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] transition-all text-sm font-bold flex items-center justify-center gap-2 group/btn">
+                            <i data-lucide="check" class="w-4 h-4"></i> Grant Access
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 2: Verified -->
+                <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-brand-500"
+                    id="req-2">
+                    <div class="scanner-line"></div>
+
+                    <div class="relative flex-shrink-0">
+                        <div class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-brand-400 to-indigo-500">
+                            <img src="https://robohash.org/student_kai?set=set4&bgset=bg2"
+                                class="w-full h-full rounded-full bg-black object-cover">
+                        </div>
+                        <div class="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
+                            <i data-lucide="badge-check" class="w-3 h-3 text-brand-400"></i>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-white font-display">Kai Cenat</h3>
+                            <span
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20 w-fit mx-auto md:mx-0">GRADUATE
+                                STUDENT</span>
+                        </div>
+                        <p class="text-sm text-gray-400">Cybersecurity · <span class="text-gray-500">14 Mutual
+                                Connections</span></p>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button onclick="rejectRequest('req-2')"
+                            class="flex-1 md:flex-none py-2 px-4 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">Ignore</button>
+                        <button onclick="acceptRequest('req-2')"
+                            class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all text-sm font-bold flex items-center justify-center gap-2">
+                            Confirm
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card 3: Standard -->
+                <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-gray-700"
+                    id="req-3">
+                    <div class="relative flex-shrink-0">
+                        <div class="w-16 h-16 rounded-full p-0.5 bg-gray-700">
+                            <img src="https://robohash.org/unknown_agent?set=set4&bgset=bg2"
+                                class="w-full h-full rounded-full bg-black object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+                        </div>
+                    </div>
+
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
+                            <h3 class="text-lg font-bold text-gray-300 font-display">Unknown Operator</h3>
+                            <span
+                                class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 border border-gray-700 w-fit mx-auto md:mx-0">EXTERNAL</span>
+                        </div>
+                        <p class="text-sm text-gray-500">No mutual connections found. <span class="text-red-400">Low
+                                Trust Score.</span></p>
+                    </div>
+
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button onclick="rejectRequest('req-3')"
+                            class="flex-1 md:flex-none py-2 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-sm font-medium">Block</button>
+                        <button onclick="acceptRequest('req-3')"
+                            class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-all text-sm font-bold">
+                            Inspect
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Suggestion Section -->
+            <div class="mt-12">
+                <h3 class="text-lg font-display font-semibold text-white mb-6 flex items-center gap-2">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
+                    AI Suggested Connections
+                </h3>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Suggestion Card -->
+                    <div class="glass-card p-6 rounded-xl text-center relative">
+                        <div
+                            class="absolute top-4 right-4 text-xs font-mono text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded bg-purple-500/10">
+                            99% MATCH</div>
+                        <img src="https://robohash.org/alice_wonder?set=set4&bgset=bg2"
+                            class="w-20 h-20 rounded-full mx-auto mb-4 ring-4 ring-white/5 shadow-2xl">
+                        <h4 class="text-white font-bold text-lg">Dr. Alice Vance</h4>
+                        <p class="text-xs text-gray-400 mb-6">Theoretical Physics</p>
+                        <button
+                            class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Connect
+                        </button>
+                    </div>
+
+                    <!-- Suggestion Card -->
+                    <div class="glass-card p-6 rounded-xl text-center relative">
+                        <div
+                            class="absolute top-4 right-4 text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded bg-blue-500/10">
+                            85% MATCH</div>
+                        <img src="https://robohash.org/gordon_free?set=set4&bgset=bg2"
+                            class="w-20 h-20 rounded-full mx-auto mb-4 ring-4 ring-white/5 shadow-2xl">
+                        <h4 class="text-white font-bold text-lg">Gordon F.</h4>
+                        <p class="text-xs text-gray-400 mb-6">Hazardous Materials</p>
+                        <button
+                            class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Connect
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Notification Toast (Hidden by default) -->
+    <div id="toast" class="fixed bottom-8 right-8 z-50 transform translate-y-24 opacity-0 transition-all duration-500">
+        <div class="glass p-4 rounded-xl border-l-4 border-brand-500 shadow-2xl flex items-center gap-4 min-w-[300px]">
+            <div class="bg-brand-500/20 p-2 rounded-full text-brand-400">
+                <i data-lucide="shield-check" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-sm">Access Granted</h4>
+                <p class="text-gray-400 text-xs">Secure channel established.</p>
             </div>
         </div>
     </div>
 
-    <!-- Scrollable List Area -->
-    <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-        
-        <!-- Filter Tabs -->
-        <div class="flex items-center gap-6 mb-8 border-b border-white/5 pb-2">
-            <button class="text-white border-b-2 border-brand-500 pb-2 px-2 font-medium text-sm tracking-wide">Pending (3)</button>
-            <button class="text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 pb-2 px-2 font-medium text-sm tracking-wide transition-all">Outgoing</button>
-            <button class="text-gray-500 hover:text-white border-b-2 border-transparent hover:border-white/20 pb-2 px-2 font-medium text-sm tracking-wide transition-all">Ignored</button>
-            
-            <div class="ml-auto flex gap-2 text-xs font-mono text-gray-500">
-                <span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-yellow-500"></div> High Priority</span>
-                <span class="flex items-center gap-1"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Verified</span>
-            </div>
-        </div>
-
-        <!-- Request List Grid -->
-        <div class="space-y-4" id="request-list">
-            
-            <!-- Card 1: High Priority -->
-            <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-yellow-500" id="req-1">
-                <div class="scanner-line"></div> <!-- Decoration -->
-                
-                <!-- Avatar -->
-                <div class="relative flex-shrink-0">
-                    <div class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-yellow-400 to-orange-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]">
-                        <img src="https://robohash.org/prof_adams?set=set4&bgset=bg2" class="w-full h-full rounded-full bg-black object-cover">
-                    </div>
-                    <div class="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
-                        <i data-lucide="crown" class="w-3 h-3 text-yellow-400 fill-yellow-400"></i>
-                    </div>
-                </div>
-
-                <!-- Info -->
-                <div class="flex-1 text-center md:text-left">
-                    <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                        <h3 class="text-lg font-bold text-white font-display">Prof. Evelyn Adams</h3>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 w-fit mx-auto md:mx-0">DEAN OF RESEARCH</span>
-                    </div>
-                    <p class="text-sm text-gray-400">Quantum Computing Dept · <span class="text-brand-400">92 Mutual Connections</span></p>
-                    <p class="text-xs text-gray-500 mt-1 font-mono">Incoming encrypted handshake request...</p>
-                </div>
-
-                <!-- Actions -->
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button onclick="rejectRequest('req-1')" class="flex-1 md:flex-none py-2 px-4 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all text-sm font-medium">Ignore</button>
-                    <button onclick="acceptRequest('req-1')" class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-gradient-to-r from-brand-600 to-brand-500 hover:to-brand-400 text-white shadow-[0_0_20px_rgba(14,165,233,0.3)] hover:shadow-[0_0_30px_rgba(14,165,233,0.5)] transition-all text-sm font-bold flex items-center justify-center gap-2 group/btn">
-                        <i data-lucide="check" class="w-4 h-4"></i> Grant Access
-                    </button>
-                </div>
-            </div>
-
-            <!-- Card 2: Verified -->
-            <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-brand-500" id="req-2">
-                <div class="scanner-line"></div>
-
-                <div class="relative flex-shrink-0">
-                    <div class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-brand-400 to-indigo-500">
-                        <img src="https://robohash.org/student_kai?set=set4&bgset=bg2" class="w-full h-full rounded-full bg-black object-cover">
-                    </div>
-                    <div class="absolute -bottom-1 -right-1 bg-black rounded-full p-1 border border-white/10">
-                        <i data-lucide="badge-check" class="w-3 h-3 text-brand-400"></i>
-                    </div>
-                </div>
-
-                <div class="flex-1 text-center md:text-left">
-                    <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                        <h3 class="text-lg font-bold text-white font-display">Kai Cenat</h3>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-500/10 text-brand-400 border border-brand-500/20 w-fit mx-auto md:mx-0">GRADUATE STUDENT</span>
-                    </div>
-                    <p class="text-sm text-gray-400">Cybersecurity · <span class="text-gray-500">14 Mutual Connections</span></p>
-                </div>
-
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button onclick="rejectRequest('req-2')" class="flex-1 md:flex-none py-2 px-4 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-all text-sm font-medium">Ignore</button>
-                    <button onclick="acceptRequest('req-2')" class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-white/10 hover:bg-white/20 text-white border border-white/10 transition-all text-sm font-bold flex items-center justify-center gap-2">
-                        Confirm
-                    </button>
-                </div>
-            </div>
-
-            <!-- Card 3: Standard -->
-            <div class="glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-gray-700" id="req-3">
-                <div class="relative flex-shrink-0">
-                    <div class="w-16 h-16 rounded-full p-0.5 bg-gray-700">
-                        <img src="https://robohash.org/unknown_agent?set=set4&bgset=bg2" class="w-full h-full rounded-full bg-black object-cover grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-                    </div>
-                </div>
-
-                <div class="flex-1 text-center md:text-left">
-                    <div class="flex flex-col md:flex-row md:items-center gap-2 mb-1">
-                        <h3 class="text-lg font-bold text-gray-300 font-display">Unknown Operator</h3>
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-gray-800 text-gray-500 border border-gray-700 w-fit mx-auto md:mx-0">EXTERNAL</span>
-                    </div>
-                    <p class="text-sm text-gray-500">No mutual connections found. <span class="text-red-400">Low Trust Score.</span></p>
-                </div>
-
-                <div class="flex items-center gap-3 w-full md:w-auto">
-                    <button onclick="rejectRequest('req-3')" class="flex-1 md:flex-none py-2 px-4 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all text-sm font-medium">Block</button>
-                    <button onclick="acceptRequest('req-3')" class="flex-1 md:flex-none py-2 px-6 rounded-lg bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 transition-all text-sm font-bold">
-                        Inspect
-                    </button>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Suggestion Section -->
-        <div class="mt-12">
-            <h3 class="text-lg font-display font-semibold text-white mb-6 flex items-center gap-2">
-                <i data-lucide="sparkles" class="w-5 h-5 text-purple-400"></i>
-                AI Suggested Connections
-            </h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                <!-- Suggestion Card -->
-                <div class="glass-card p-6 rounded-xl text-center relative">
-                    <div class="absolute top-4 right-4 text-xs font-mono text-purple-400 border border-purple-500/30 px-2 py-0.5 rounded bg-purple-500/10">99% MATCH</div>
-                    <img src="https://robohash.org/alice_wonder?set=set4&bgset=bg2" class="w-20 h-20 rounded-full mx-auto mb-4 ring-4 ring-white/5 shadow-2xl">
-                    <h4 class="text-white font-bold text-lg">Dr. Alice Vance</h4>
-                    <p class="text-xs text-gray-400 mb-6">Theoretical Physics</p>
-                    <button class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Connect
-                    </button>
-                </div>
-
-                 <!-- Suggestion Card -->
-                 <div class="glass-card p-6 rounded-xl text-center relative">
-                    <div class="absolute top-4 right-4 text-xs font-mono text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded bg-blue-500/10">85% MATCH</div>
-                    <img src="https://robohash.org/gordon_free?set=set4&bgset=bg2" class="w-20 h-20 rounded-full mx-auto mb-4 ring-4 ring-white/5 shadow-2xl">
-                    <h4 class="text-white font-bold text-lg">Gordon F.</h4>
-                    <p class="text-xs text-gray-400 mb-6">Hazardous Materials</p>
-                    <button class="w-full py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-brand-400 text-sm font-medium transition-colors flex items-center justify-center gap-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i> Connect
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-  </main>
-
-  <!-- Notification Toast (Hidden by default) -->
-  <div id="toast" class="fixed bottom-8 right-8 z-50 transform translate-y-24 opacity-0 transition-all duration-500">
-      <div class="glass p-4 rounded-xl border-l-4 border-brand-500 shadow-2xl flex items-center gap-4 min-w-[300px]">
-          <div class="bg-brand-500/20 p-2 rounded-full text-brand-400">
-              <i data-lucide="shield-check" class="w-5 h-5"></i>
-          </div>
-          <div>
-              <h4 class="text-white font-bold text-sm">Access Granted</h4>
-              <p class="text-gray-400 text-xs">Secure channel established.</p>
-          </div>
-      </div>
-  </div>
-
-  <script>
-    lucide.createIcons();
-
-    function showToast(title, msg, type = 'success') {
-        const toast = document.getElementById('toast');
-        const titleEl = toast.querySelector('h4');
-        const msgEl = toast.querySelector('p');
-        const iconContainer = toast.querySelector('.bg-brand-500\\/20'); // Escape slash for querySelector
-        
-        titleEl.textContent = title;
-        msgEl.textContent = msg;
-
-        // Reset styles
-        toast.className = `fixed bottom-8 right-8 z-50 transform transition-all duration-500 glass p-4 rounded-xl shadow-2xl flex items-center gap-4 min-w-[300px] border-l-4`;
-
-        if(type === 'success') {
-            toast.classList.add('border-brand-500');
-            iconContainer.className = 'bg-brand-500/20 p-2 rounded-full text-brand-400';
-            iconContainer.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i>';
-        } else {
-            toast.classList.add('border-red-500');
-            iconContainer.className = 'bg-red-500/20 p-2 rounded-full text-red-400';
-            iconContainer.innerHTML = '<i data-lucide="ban" class="w-5 h-5"></i>';
-        }
-
+    <script>
         lucide.createIcons();
 
-        // Animate In
-        toast.classList.remove('translate-y-24', 'opacity-0');
-        
-        // Remove after 3s
-        setTimeout(() => {
-            toast.classList.add('translate-y-24', 'opacity-0');
-        }, 3000);
-    }
+        function showToast(title, msg, type = 'success') {
+            const toast = document.getElementById('toast');
+            const titleEl = toast.querySelector('h4');
+            const msgEl = toast.querySelector('p');
+            const iconContainer = toast.querySelector('.bg-brand-500\\/20'); // Escape slash for querySelector
 
-    function acceptRequest(id) {
-        const card = document.getElementById(id);
-        const btn = card.querySelector('button:last-child');
-        
-        // Loading State
-        btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Processing`;
-        lucide.createIcons();
+            titleEl.textContent = title;
+            msgEl.textContent = msg;
 
-        setTimeout(() => {
-            // Success State
-            btn.className = "flex-1 md:flex-none py-2 px-6 rounded-lg bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all text-sm font-bold flex items-center justify-center gap-2";
-            btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Authorized`;
+            // Reset styles
+            toast.className = `fixed bottom-8 right-8 z-50 transform transition-all duration-500 glass p-4 rounded-xl shadow-2xl flex items-center gap-4 min-w-[300px] border-l-4`;
+
+            if (type === 'success') {
+                toast.classList.add('border-brand-500');
+                iconContainer.className = 'bg-brand-500/20 p-2 rounded-full text-brand-400';
+                iconContainer.innerHTML = '<i data-lucide="shield-check" class="w-5 h-5"></i>';
+            } else {
+                toast.classList.add('border-red-500');
+                iconContainer.className = 'bg-red-500/20 p-2 rounded-full text-red-400';
+                iconContainer.innerHTML = '<i data-lucide="ban" class="w-5 h-5"></i>';
+            }
+
             lucide.createIcons();
 
-            showToast("Connection Secure", "Handshake completed successfully.", 'success');
+            // Animate In
+            toast.classList.remove('translate-y-24', 'opacity-0');
 
-            // Slide out
+            // Remove after 3s
             setTimeout(() => {
-                card.classList.add('slide-out-right');
-                updatePendingCount(-1);
-            }, 800);
-        }, 1000);
-    }
+                toast.classList.add('translate-y-24', 'opacity-0');
+            }, 3000);
+        }
 
-    function rejectRequest(id) {
-        const card = document.getElementById(id);
-        
-        showToast("Connection Denied", "User added to blocklist.", 'error');
+        function acceptRequest(id) {
+            const card = document.getElementById(id);
+            const btn = card.querySelector('button:last-child');
 
-        card.classList.add('slide-out-left');
-        updatePendingCount(-1);
-    }
+            // Loading State
+            btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-4 h-4"></i> Processing`;
+            lucide.createIcons();
 
-    function updatePendingCount(change) {
-        // Mock function to update the red number in the tab/header
-        const headerBadge = document.querySelector('h2 span'); // The glowing pill in header
-        // In a real app, update state/dom numbers here
-    }
-  </script>
+            setTimeout(() => {
+                // Success State
+                btn.className = "flex-1 md:flex-none py-2 px-6 rounded-lg bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all text-sm font-bold flex items-center justify-center gap-2";
+                btn.innerHTML = `<i data-lucide="check-circle" class="w-4 h-4"></i> Authorized`;
+                lucide.createIcons();
+
+                showToast("Connection Secure", "Handshake completed successfully.", 'success');
+
+                // Slide out
+                setTimeout(() => {
+                    card.classList.add('slide-out-right');
+                    updatePendingCount(-1);
+                }, 800);
+            }, 1000);
+        }
+
+        function rejectRequest(id) {
+            const card = document.getElementById(id);
+
+            showToast("Connection Denied", "User added to blocklist.", 'error');
+
+            card.classList.add('slide-out-left');
+            updatePendingCount(-1);
+        }
+
+        function updatePendingCount(change) {
+            // Mock function to update the red number in the tab/header
+            const headerBadge = document.querySelector('h2 span'); // The glowing pill in header
+            // In a real app, update state/dom numbers here
+        }
+    </script>
+    <script src="js/friend-request-modal.js"></script>`r`n
+    <script src="js/integration.js"></script>
 </body>
+
 </html>

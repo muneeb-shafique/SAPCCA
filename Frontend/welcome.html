@@ -607,7 +607,7 @@
                 if (response.ok) {
                     // Store token and user info
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
 
                     showToast('Success', 'Login successful!');
 
@@ -698,7 +698,7 @@
                 if (response.ok) {
                     // Store token and user info
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    sessionStorage.setItem('user', JSON.stringify(data.user));
 
                     showToast('Verified', 'Account verified successfully!');
                     showToast('Welcome', 'Redirecting to dashboard...');
@@ -732,6 +732,7 @@
         });
 
     </script>
+    <script src="js/welcome-enhancements.js"></script>
 </body>
 
 </html>

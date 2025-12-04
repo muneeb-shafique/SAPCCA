@@ -15,6 +15,7 @@ def profile():
         return jsonify({"error": "User not found"}), 404
     
     return jsonify({
+        "id": user.id,
         "name": user.display_name,
         "email": user.email,
         "avatar": user.avatar_url

@@ -1,662 +1,734 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SAPCCA · System Protocols</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SAPCCA · System Protocols</title>
 
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet" />
 
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Tailwind Config -->
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
-            accent: { 400: "#a855f7", 500: "#8b5cf6" },
-            ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
-          },
-          fontFamily: {
-            sans: ["Inter", "sans-serif"],
-            display: ["Space Grotesk", "sans-serif"]
-          },
-          animation: {
-            'scan': 'scan 3s linear infinite',
-            'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-          },
-          keyframes: {
-            scan: {
-              '0%': { transform: 'translateX(-100%)' },
-              '100%': { transform: 'translateX(200%)' }
-            },
-            pulseGlow: {
-              '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(14, 165, 233, 0.2)' },
-              '50%': { opacity: .7, boxShadow: '0 0 10px rgba(14, 165, 233, 0.05)' }
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
+                        accent: { 400: "#a855f7", 500: "#8b5cf6" },
+                        ui: { bg: "#050505", panel: "#111317", border: "rgba(255,255,255,0.08)" }
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"]
+                    },
+                    animation: {
+                        'scan': 'scan 3s linear infinite',
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        scan: {
+                            '0%': { transform: 'translateX(-100%)' },
+                            '100%': { transform: 'translateX(200%)' }
+                        },
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(14, 165, 233, 0.2)' },
+                            '50%': { opacity: .7, boxShadow: '0 0 10px rgba(14, 165, 233, 0.05)' }
+                        }
+                    }
+                }
             }
-          }
+        };
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #e6eef8;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            padding-bottom: 100px;
+            /* Space for fixed save bar */
         }
-      }
-    };
-  </script>
 
-  <style>
-    body {
-      background-color: #050505;
-      color: #e6eef8;
-      -webkit-font-smoothing: antialiased;
-      overflow-x: hidden;
-      padding-bottom: 100px; /* Space for fixed save bar */
-    }
+        /* Mesh Background */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
+        }
 
-    /* Mesh Background */
-    .mesh-bg {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-        background: 
-            radial-gradient(circle at 15% 50%, rgba(56, 189, 248, 0.08), transparent 25%), 
-            radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.08), transparent 25%);
-    }
+        /* Grid Overlay */
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
 
-    /* Grid Overlay */
-    .grid-overlay {
-        position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1;
-        background-image: 
-            linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px), 
-            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        background-size: 50px 50px;
-        mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
-    }
+        /* Glass Panels */
+        .glass {
+            background: rgba(17, 19, 23, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
 
-    /* Glass Panels */
-    .glass {
-      background: rgba(17, 19, 23, 0.6);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    
-    .glass-card {
-        background: linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
-        border: 1px solid rgba(255, 255, 255, 0.05);
-        transition: all 0.2s ease;
-    }
-    .glass-card:hover {
-        border-color: rgba(56, 189, 248, 0.3);
-    }
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
 
-    /* Custom Inputs */
-    .modern-input {
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: white;
-        transition: all 0.3s ease;
-    }
-    .modern-input:focus {
-        border-color: #38bdf8;
-        box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
-        background: rgba(0, 0, 0, 0.5);
-        outline: none;
-    }
-    .modern-input:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
+        .glass-card:hover {
+            border-color: rgba(56, 189, 248, 0.3);
+        }
 
-    /* Custom Toggles */
-    .toggle-checkbox:checked {
-        right: 0;
-        border-color: #38bdf8;
-    }
-    .toggle-checkbox:checked + .toggle-label {
-        background-color: #0ea5e9;
-    }
-    
-    /* Save Bar Animation */
-    .save-bar {
-        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
-    }
-    .save-bar.hidden-bar {
-        transform: translate(-50%, 150%);
-        opacity: 0;
-        pointer-events: none;
-    }
+        /* Custom Inputs */
+        .modern-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            transition: all 0.3s ease;
+        }
 
-  </style>
+        .modern-input:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.15);
+            background: rgba(0, 0, 0, 0.5);
+            outline: none;
+        }
+
+        .modern-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Custom Toggles */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #38bdf8;
+        }
+
+        .toggle-checkbox:checked+.toggle-label {
+            background-color: #0ea5e9;
+        }
+
+        /* Save Bar Animation */
+        .save-bar {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        .save-bar.hidden-bar {
+            transform: translate(-50%, 150%);
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
 </head>
 
 <body class="flex min-h-screen">
 
-  <!-- Background Ambience -->
-  <div class="mesh-bg"></div>
-  <div class="grid-overlay"></div>
+    <!-- Background Ambience -->
+    <div class="mesh-bg"></div>
+    <div class="grid-overlay"></div>
 
-  <!-- SIDEBAR (Consistent with Requests.html) -->
-  <aside class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0 z-20 sticky top-0 h-screen border-r border-white/5">
-    <!-- Top Section -->
-    <div class="p-8">
-      <!-- Logo -->
-      <div class="flex items-center gap-3 mb-12">
-        <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer">
-          <i data-lucide="shield-check" class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
-        </div>
-        <div>
-          <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
-          <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
-        </div>
-      </div>
-
-      <!-- Navigation -->
-      <nav class="space-y-2">
-        <a href="dashboard_teachers.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-            <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-            <span class="font-medium">Dashboard</span>
-        </a>
-        <a href="chat.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-          <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-          <span class="font-medium">Encrypted Chats</span>
-        </a>
-        <a href="friends.html" class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
-          <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
-          <span class="font-medium">Friends</span>
-          <span class="ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
-        </a>
-        <a href="#" class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20">
-          <i data-lucide="settings" class="w-5 h-5"></i>
-          <span class="font-medium">Settings</span>
-        </a>
-      </nav>
-    </div>
-
-    <!-- Bottom Section -->
-    <div class="p-8 border-t border-white/5">
-        <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
-            <div class="relative">
-                <img id="sidebar-avatar" src="https://robohash.org/admin?set=set4&bgset=bg2" class="w-10 h-10 rounded-full ring-2 ring-brand-500/50">
-                <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
+    <!-- SIDEBAR (Consistent with Requests.html) -->
+    <aside
+        class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0 z-20 sticky top-0 h-screen border-r border-white/5">
+        <!-- Top Section -->
+        <div class="p-8">
+            <!-- Logo -->
+            <div class="flex items-center gap-3 mb-12">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20 ring-1 ring-white/10 group cursor-pointer">
+                    <i data-lucide="shield-check"
+                        class="w-6 h-6 text-white group-hover:scale-110 transition-transform"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
+                </div>
             </div>
-            <div class="overflow-hidden">
-                <p class="text-sm font-bold text-white truncate">Operator.X</p>
-                <p class="text-xs text-gray-500 truncate font-mono">ID: 884-A2</p>
-            </div>
-            <a href="welcome.html"><button id="logout-sidebar-btn" class="ml-auto text-gray-500 hover:text-white transition-colors"><i data-lucide="log-out" class="w-4 h-4"></i></button></a>
-        </div>
-    </div>
-  </aside>
 
-  <!-- MAIN CONTENT -->
-  <main class="flex-1 min-w-0 flex flex-col relative z-10">
-    
-    <!-- Top Header -->
-    <header class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
-        <div class="flex items-center gap-4">
-            <div class="lg:hidden">
-                <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+            <!-- Navigation -->
+            <nav class="space-y-2">
+                <a href="dashboard_teachers.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="chat.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Encrypted Chats</span>
+                </a>
+                <a href="friends.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Friends</span>
+                    <span
+                        class="ml-auto bg-gray-800 text-gray-400 text-[10px] font-bold px-2 py-0.5 rounded-full">3</span>
+                </a>
+                <a href="#"
+                    class="flex items-center gap-4 p-3 rounded-lg bg-brand-500/10 text-brand-400 ring-1 ring-brand-500/20">
+                    <i data-lucide="settings" class="w-5 h-5"></i>
+                    <span class="font-medium">Settings</span>
+                </a>
+            </nav>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="p-8 border-t border-white/5">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                <div class="relative">
+                    <img id="global-user-avatar" src="https://robohash.org/admin?set=set4&bgset=bg2"
+                        class="w-10 h-10 rounded-full ring-2 ring-brand-500/50">
+                    <span
+                        class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-[#111317]"></span>
+                </div>
+                <div class="overflow-hidden">
+                    <p id="global-user-name" class="text-sm font-bold text-white truncate">Loading...</p>
+                    <p class="text-xs text-gray-500 truncate font-mono user-id-display">ID: Loading...</p>
+                </div>
+                <a href="welcome.html"><button id="logout-sidebar-btn"
+                        class="ml-auto text-gray-500 hover:text-white transition-colors"><i data-lucide="log-out"
+                            class="w-4 h-4"></i></button></a>
             </div>
-            <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2 text-white">
-                <i data-lucide="sliders" class="w-5 h-5 text-brand-400"></i>
-                System Configuration
-            </h2>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 min-w-0 flex flex-col relative z-10">
+
+        <!-- Top Header -->
+        <header
+            class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <div class="lg:hidden">
+                    <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                </div>
+                <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2 text-white">
+                    <i data-lucide="sliders" class="w-5 h-5 text-brand-400"></i>
+                    System Configuration
+                </h2>
+            </div>
+            <div class="flex gap-3">
+                <button onclick="window.history.back()"
+                    class="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-gray-400 transition-colors">
+                    <i data-lucide="arrow-left" class="w-4 h-4"></i> Return
+                </button>
+            </div>
+        </header>
+
+        <div class="p-6 lg:p-12 max-w-5xl mx-auto w-full">
+
+            <!-- Tab Navigation -->
+            <div class="flex flex-wrap gap-4 mb-10">
+                <button
+                    class="tab-btn active px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/20"
+                    data-target="profile">
+                    <i data-lucide="user-circle" class="w-4 h-4"></i> Identity
+                </button>
+                <button
+                    class="tab-btn px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    data-target="notifications">
+                    <i data-lucide="bell-ring" class="w-4 h-4"></i> Signals
+                </button>
+                <button
+                    class="tab-btn px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent"
+                    data-target="security">
+                    <i data-lucide="shield-alert" class="w-4 h-4"></i> Security
+                </button>
+            </div>
+
+            <!-- TAB: PROFILE -->
+            <section id="tab-profile" class="tab-content space-y-6 animate-pulse-glow">
+                <div class="glass-card p-8 rounded-2xl border border-white/10">
+                    <div class="flex items-start justify-between mb-8">
+                        <div>
+                            <h3 class="text-xl font-bold text-white font-display">Operator Identity</h3>
+                            <p class="text-sm text-gray-500 mt-1">Manage your public facing network profile.</p>
+                        </div>
+                        <div
+                            class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
+                            STATUS: VERIFIED
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col md:flex-row gap-8 items-start">
+                        <!-- Avatar Upload -->
+                        <div class="flex flex-col items-center gap-4">
+                            <div class="relative group cursor-pointer">
+                                <div
+                                    class="absolute inset-0 bg-brand-500 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity">
+                                </div>
+                                <img id="avatar-preview" src="https://robohash.org/admin?set=set4&bgset=bg2"
+                                    class="relative w-32 h-32 rounded-full border-2 border-white/10 group-hover:border-brand-500 transition-colors object-cover bg-black">
+                                <div
+                                    class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <i data-lucide="upload" class="w-8 h-8 text-white"></i>
+                                </div>
+                                <input type="file" id="avatar-upload" class="absolute inset-0 opacity-0 cursor-pointer"
+                                    accept="image/*">
+                            </div>
+                            <button id="reset-avatar-btn"
+                                class="text-xs text-gray-500 hover:text-red-400 transition-colors">Reset to
+                                Default</button>
+                        </div>
+
+                        <!-- Form Fields -->
+                        <div class="flex-1 w-full space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label class="text-xs font-mono text-gray-500 uppercase">Display Name</label>
+                                    <input type="text" id="input-username"
+                                        class="modern-input w-full p-4 rounded-xl text-sm" placeholder="Operator Name"
+                                        value="Operator.X">
+                                </div>
+                                <div class="space-y-2">
+                                    <label class="text-xs font-mono text-gray-500 uppercase">Clearance ID</label>
+                                    <input type="text" value="884-A2-SECURE" disabled
+                                        class="modern-input w-full p-4 rounded-xl text-sm opacity-50 cursor-not-allowed font-mono text-gray-400">
+                                </div>
+                            </div>
+
+                            <div class="space-y-2">
+                                <label class="text-xs font-mono text-gray-500 uppercase">University Email</label>
+                                <input type="email" id="input-email" class="modern-input w-full p-4 rounded-xl text-sm"
+                                    value="operator.x@university.edu" disabled>
+                                <p class="text-[10px] text-gray-600 flex items-center gap-1"><i data-lucide="lock"
+                                        class="w-3 h-3"></i> Managed by Organization Admin</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: NOTIFICATIONS -->
+            <section id="tab-notifications" class="tab-content hidden space-y-6">
+                <div class="glass-card p-8 rounded-2xl border border-white/10">
+                    <h3 class="text-xl font-bold text-white font-display mb-6">Signal Protocols</h3>
+
+                    <div class="space-y-6">
+                        <!-- Toggle Item -->
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 rounded-lg bg-brand-500/10 text-brand-400">
+                                    <i data-lucide="mail" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-medium">Email Digests</h4>
+                                    <p class="text-xs text-gray-500">Daily summaries of network activity.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-email" class="sr-only peer" checked>
+                                <div
+                                    class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Toggle Item -->
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
+                            <div class="flex items-center gap-4">
+                                <div class="p-3 rounded-lg bg-purple-500/10 text-purple-400">
+                                    <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-white font-medium">Chat Pings</h4>
+                                    <p class="text-xs text-gray-500">Immediate alerts for encrypted messages.</p>
+                                </div>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-chat" class="sr-only peer" checked>
+                                <div
+                                    class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB: SECURITY -->
+            <section id="tab-security" class="tab-content hidden space-y-6">
+                <div class="glass-card p-8 rounded-2xl border border-white/10">
+                    <div class="flex items-center gap-3 mb-6">
+                        <i data-lucide="shield" class="w-6 h-6 text-brand-400"></i>
+                        <h3 class="text-xl font-bold text-white font-display">Clearance & Auth</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <!-- MFA -->
+                        <div
+                            class="p-6 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/10">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="text-white font-bold">2-Factor Auth</h4>
+                                <span id="mfa-badge"
+                                    class="px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-[10px] font-bold">INACTIVE</span>
+                            </div>
+                            <p class="text-xs text-gray-400 mb-6">Require hardware key or biometric scan for login.</p>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="toggle-mfa" class="sr-only peer">
+                                <div
+                                    class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600">
+                                </div>
+                                <span class="ml-3 text-sm font-medium text-gray-300">Enable MFA</span>
+                            </label>
+                        </div>
+
+                        <!-- Session -->
+                        <div
+                            class="p-6 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/10">
+                            <h4 class="text-white font-bold mb-4">Session Timeout</h4>
+                            <select id="select-timeout" class="modern-input w-full p-3 rounded-lg text-sm bg-black/50">
+                                <option value="15">15 Minutes (High Security)</option>
+                                <option value="60" selected>1 Hour (Standard)</option>
+                                <option value="240">4 Hours</option>
+                                <option value="0">Never (Dev Only)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Danger Zone -->
+                    <div class="mt-8 pt-8 border-t border-red-500/20">
+                        <h4 class="text-red-400 font-bold mb-4 text-sm uppercase tracking-wider">Danger Zone</h4>
+                        <div class="flex gap-4">
+                            <button id="btn-change-pass"
+                                class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-gray-300 transition-colors">Change
+                                Password</button>
+                            <button id="btn-logout-all"
+                                class="px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-sm text-red-400 transition-colors">Revoke
+                                All Sessions</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- SAVE BAR (Fixed Bottom) -->
+    <div id="save-bar"
+        class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl glass p-4 rounded-xl shadow-2xl border border-brand-500/30 flex items-center justify-between save-bar hidden-bar z-50">
+        <div class="flex items-center gap-3">
+            <div class="p-2 rounded-full bg-yellow-500/20 text-yellow-500 animate-pulse">
+                <i data-lucide="alert-circle" class="w-5 h-5"></i>
+            </div>
+            <div>
+                <p class="text-white font-bold text-sm">Unsaved Configuration</p>
+                <p class="text-gray-400 text-xs">Protocols modified locally.</p>
+            </div>
         </div>
         <div class="flex gap-3">
-             <button onclick="window.history.back()" class="flex items-center gap-2 px-4 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-gray-400 transition-colors">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i> Return
-             </button>
-        </div>
-    </header>
-
-    <div class="p-6 lg:p-12 max-w-5xl mx-auto w-full">
-        
-        <!-- Tab Navigation -->
-        <div class="flex flex-wrap gap-4 mb-10">
-            <button class="tab-btn active px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 bg-brand-500/10 text-brand-400 border border-brand-500/20" data-target="profile">
-                <i data-lucide="user-circle" class="w-4 h-4"></i> Identity
-            </button>
-            <button class="tab-btn px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent" data-target="notifications">
-                <i data-lucide="bell-ring" class="w-4 h-4"></i> Signals
-            </button>
-            <button class="tab-btn px-6 py-3 rounded-xl font-medium text-sm transition-all flex items-center gap-2 text-gray-400 hover:text-white hover:bg-white/5 border border-transparent" data-target="security">
-                <i data-lucide="shield-alert" class="w-4 h-4"></i> Security
+            <button id="btn-discard"
+                class="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors">Revert</button>
+            <button id="btn-save"
+                class="px-6 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all flex items-center gap-2">
+                <i data-lucide="save" class="w-4 h-4"></i> Commit Changes
             </button>
         </div>
-
-        <!-- TAB: PROFILE -->
-        <section id="tab-profile" class="tab-content space-y-6 animate-pulse-glow">
-            <div class="glass-card p-8 rounded-2xl border border-white/10">
-                <div class="flex items-start justify-between mb-8">
-                    <div>
-                        <h3 class="text-xl font-bold text-white font-display">Operator Identity</h3>
-                        <p class="text-sm text-gray-500 mt-1">Manage your public facing network profile.</p>
-                    </div>
-                    <div class="px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-mono">
-                        STATUS: VERIFIED
-                    </div>
-                </div>
-
-                <div class="flex flex-col md:flex-row gap-8 items-start">
-                    <!-- Avatar Upload -->
-                    <div class="flex flex-col items-center gap-4">
-                        <div class="relative group cursor-pointer">
-                            <div class="absolute inset-0 bg-brand-500 rounded-full blur-lg opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                            <img id="avatar-preview" src="https://robohash.org/admin?set=set4&bgset=bg2" class="relative w-32 h-32 rounded-full border-2 border-white/10 group-hover:border-brand-500 transition-colors object-cover bg-black">
-                            <div class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i data-lucide="upload" class="w-8 h-8 text-white"></i>
-                            </div>
-                            <input type="file" id="avatar-upload" class="absolute inset-0 opacity-0 cursor-pointer" accept="image/*">
-                        </div>
-                        <button id="reset-avatar-btn" class="text-xs text-gray-500 hover:text-red-400 transition-colors">Reset to Default</button>
-                    </div>
-
-                    <!-- Form Fields -->
-                    <div class="flex-1 w-full space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div class="space-y-2">
-                                <label class="text-xs font-mono text-gray-500 uppercase">Display Name</label>
-                                <input type="text" id="input-username" class="modern-input w-full p-4 rounded-xl text-sm" placeholder="Operator Name" value="Operator.X">
-                            </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-mono text-gray-500 uppercase">Clearance ID</label>
-                                <input type="text" value="884-A2-SECURE" disabled class="modern-input w-full p-4 rounded-xl text-sm opacity-50 cursor-not-allowed font-mono text-gray-400">
-                            </div>
-                        </div>
-
-                        <div class="space-y-2">
-                            <label class="text-xs font-mono text-gray-500 uppercase">University Email</label>
-                            <input type="email" id="input-email" class="modern-input w-full p-4 rounded-xl text-sm" value="operator.x@university.edu" disabled>
-                            <p class="text-[10px] text-gray-600 flex items-center gap-1"><i data-lucide="lock" class="w-3 h-3"></i> Managed by Organization Admin</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: NOTIFICATIONS -->
-        <section id="tab-notifications" class="tab-content hidden space-y-6">
-            <div class="glass-card p-8 rounded-2xl border border-white/10">
-                <h3 class="text-xl font-bold text-white font-display mb-6">Signal Protocols</h3>
-                
-                <div class="space-y-6">
-                    <!-- Toggle Item -->
-                    <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                        <div class="flex items-center gap-4">
-                            <div class="p-3 rounded-lg bg-brand-500/10 text-brand-400">
-                                <i data-lucide="mail" class="w-5 h-5"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-white font-medium">Email Digests</h4>
-                                <p class="text-xs text-gray-500">Daily summaries of network activity.</p>
-                            </div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="toggle-email" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                        </label>
-                    </div>
-
-                    <!-- Toggle Item -->
-                    <div class="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5">
-                        <div class="flex items-center gap-4">
-                            <div class="p-3 rounded-lg bg-purple-500/10 text-purple-400">
-                                <i data-lucide="message-circle" class="w-5 h-5"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-white font-medium">Chat Pings</h4>
-                                <p class="text-xs text-gray-500">Immediate alerts for encrypted messages.</p>
-                            </div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="toggle-chat" class="sr-only peer" checked>
-                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                        </label>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- TAB: SECURITY -->
-        <section id="tab-security" class="tab-content hidden space-y-6">
-            <div class="glass-card p-8 rounded-2xl border border-white/10">
-                <div class="flex items-center gap-3 mb-6">
-                    <i data-lucide="shield" class="w-6 h-6 text-brand-400"></i>
-                    <h3 class="text-xl font-bold text-white font-display">Clearance & Auth</h3>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <!-- MFA -->
-                    <div class="p-6 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/10">
-                        <div class="flex justify-between items-start mb-4">
-                            <h4 class="text-white font-bold">2-Factor Auth</h4>
-                            <span id="mfa-badge" class="px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-[10px] font-bold">INACTIVE</span>
-                        </div>
-                        <p class="text-xs text-gray-400 mb-6">Require hardware key or biometric scan for login.</p>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="toggle-mfa" class="sr-only peer">
-                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
-                            <span class="ml-3 text-sm font-medium text-gray-300">Enable MFA</span>
-                        </label>
-                    </div>
-
-                    <!-- Session -->
-                    <div class="p-6 rounded-xl bg-gradient-to-br from-white/5 to-transparent border border-white/10">
-                         <h4 class="text-white font-bold mb-4">Session Timeout</h4>
-                         <select id="select-timeout" class="modern-input w-full p-3 rounded-lg text-sm bg-black/50">
-                             <option value="15">15 Minutes (High Security)</option>
-                             <option value="60" selected>1 Hour (Standard)</option>
-                             <option value="240">4 Hours</option>
-                             <option value="0">Never (Dev Only)</option>
-                         </select>
-                    </div>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="mt-8 pt-8 border-t border-red-500/20">
-                    <h4 class="text-red-400 font-bold mb-4 text-sm uppercase tracking-wider">Danger Zone</h4>
-                    <div class="flex gap-4">
-                        <button id="btn-change-pass" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-sm text-gray-300 transition-colors">Change Password</button>
-                        <button id="btn-logout-all" class="px-4 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-sm text-red-400 transition-colors">Revoke All Sessions</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
     </div>
-  </main>
 
-  <!-- SAVE BAR (Fixed Bottom) -->
-  <div id="save-bar" class="fixed bottom-8 left-1/2 -translate-x-1/2 w-[90%] max-w-4xl glass p-4 rounded-xl shadow-2xl border border-brand-500/30 flex items-center justify-between save-bar hidden-bar z-50">
-      <div class="flex items-center gap-3">
-          <div class="p-2 rounded-full bg-yellow-500/20 text-yellow-500 animate-pulse">
-              <i data-lucide="alert-circle" class="w-5 h-5"></i>
-          </div>
-          <div>
-              <p class="text-white font-bold text-sm">Unsaved Configuration</p>
-              <p class="text-gray-400 text-xs">Protocols modified locally.</p>
-          </div>
-      </div>
-      <div class="flex gap-3">
-          <button id="btn-discard" class="px-4 py-2 rounded-lg text-sm text-gray-400 hover:text-white transition-colors">Revert</button>
-          <button id="btn-save" class="px-6 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold shadow-[0_0_15px_rgba(14,165,233,0.3)] transition-all flex items-center gap-2">
-              <i data-lucide="save" class="w-4 h-4"></i> Commit Changes
-          </button>
-      </div>
-  </div>
+    <!-- Custom Modal (Hidden) -->
+    <div id="app-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex items-center gap-3 mb-4">
+                <div id="modal-icon-bg" class="p-2 rounded-lg bg-brand-500/20 text-brand-400">
+                    <i id="modal-icon" data-lucide="info" class="w-6 h-6"></i>
+                </div>
+                <h3 id="modal-title" class="text-lg font-bold text-white">Alert</h3>
+            </div>
+            <p id="modal-msg" class="text-sm text-gray-400 mb-6 leading-relaxed">Message goes here.</p>
+            <div class="flex justify-end gap-3">
+                <button id="modal-cancel"
+                    class="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors">Cancel</button>
+                <button id="modal-confirm"
+                    class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-sm font-bold transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
 
-  <!-- Custom Modal (Hidden) -->
-  <div id="app-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
-      <div class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
-          <div class="flex items-center gap-3 mb-4">
-              <div id="modal-icon-bg" class="p-2 rounded-lg bg-brand-500/20 text-brand-400">
-                  <i id="modal-icon" data-lucide="info" class="w-6 h-6"></i>
-              </div>
-              <h3 id="modal-title" class="text-lg font-bold text-white">Alert</h3>
-          </div>
-          <p id="modal-msg" class="text-sm text-gray-400 mb-6 leading-relaxed">Message goes here.</p>
-          <div class="flex justify-end gap-3">
-              <button id="modal-cancel" class="px-4 py-2 text-sm text-gray-500 hover:text-white transition-colors">Cancel</button>
-              <button id="modal-confirm" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-sm font-bold transition-colors">Confirm</button>
-          </div>
-      </div>
-  </div>
-
-  <script>
-    lucide.createIcons();
-
-    // --- State Management ---
-    const DEFAULT_AVATAR = "https://robohash.org/admin?set=set4&bgset=bg2";
-    
-    // Store original state for diffing
-    const initialState = {
-        username: "Operator.X",
-        email: "operator.x@university.edu",
-        avatar: DEFAULT_AVATAR,
-        notifyEmail: true,
-        notifyChat: true,
-        mfa: false,
-        timeout: "60"
-    };
-
-    let currentState = { ...initialState };
-    let isSaving = false;
-
-    // DOM Elements
-    const elements = {
-        saveBar: document.getElementById('save-bar'),
-        inputs: {
-            username: document.getElementById('input-username'),
-            notifyEmail: document.getElementById('toggle-email'),
-            notifyChat: document.getElementById('toggle-chat'),
-            mfa: document.getElementById('toggle-mfa'),
-            timeout: document.getElementById('select-timeout'),
-            avatar: document.getElementById('avatar-upload')
-        },
-        buttons: {
-            save: document.getElementById('btn-save'),
-            discard: document.getElementById('btn-discard'),
-            resetAvatar: document.getElementById('reset-avatar-btn'),
-            changePass: document.getElementById('btn-change-pass'),
-            logoutAll: document.getElementById('btn-logout-all')
-        },
-        previews: {
-            avatar: document.getElementById('avatar-preview'),
-            sidebarAvatar: document.getElementById('sidebar-avatar'),
-            mfaBadge: document.getElementById('mfa-badge')
-        },
-        modal: {
-            el: document.getElementById('app-modal'),
-            title: document.getElementById('modal-title'),
-            msg: document.getElementById('modal-msg'),
-            confirm: document.getElementById('modal-confirm'),
-            cancel: document.getElementById('modal-cancel'),
-            icon: document.getElementById('modal-icon'),
-            iconBg: document.getElementById('modal-icon-bg')
-        },
-        tabs: document.querySelectorAll('.tab-btn'),
-        contents: document.querySelectorAll('.tab-content')
-    };
-
-    // --- Logic ---
-
-    function checkForChanges() {
-        const hasChanges = JSON.stringify(initialState) !== JSON.stringify(currentState);
-        
-        if (hasChanges) {
-            elements.saveBar.classList.remove('hidden-bar');
-        } else {
-            elements.saveBar.classList.add('hidden-bar');
-        }
-        
-        // Update MFA Badge UI specifically
-        if (currentState.mfa) {
-            elements.previews.mfaBadge.className = "px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold";
-            elements.previews.mfaBadge.textContent = "ACTIVE";
-        } else {
-            elements.previews.mfaBadge.className = "px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-[10px] font-bold";
-            elements.previews.mfaBadge.textContent = "INACTIVE";
-        }
-    }
-
-    function updateState(key, value) {
-        currentState[key] = value;
-        checkForChanges();
-    }
-
-    function handleFileSelect(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            elements.previews.avatar.src = ev.target.result;
-            // For mock purposes, we store the big base64 string
-            updateState('avatar', ev.target.result);
-        }
-        reader.readAsDataURL(file);
-    }
-
-    // --- Mock API with Exponential Backoff ---
-    async function saveSettingsApi(data) {
-        const apiKey = ""; // Implicitly provided by env
-        // Using a generative model to simulate a "Process" just to adhere to the instruction
-        // In reality, this would be a PUT request to a backend.
-        // We will simulate the network delay.
-        
-        return new Promise((resolve, reject) => {
-             let attempt = 0;
-             const tryReq = () => {
-                 attempt++;
-                 const delay = Math.pow(2, attempt) * 200; // 200, 800, 1800...
-                 setTimeout(() => {
-                     // 90% chance of success
-                     if (Math.random() > 0.1) resolve({ success: true });
-                     else if (attempt < 3) tryReq(); // Retry
-                     else reject({ error: "Network timeout" });
-                 }, delay);
-             }
-             tryReq();
-        });
-    }
-
-    async function executeSave() {
-        if (isSaving) return;
-        isSaving = true;
-        
-        const originalBtnText = elements.buttons.save.innerHTML;
-        elements.buttons.save.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
-        elements.buttons.save.disabled = true;
+    <script>
         lucide.createIcons();
 
-        try {
-            await saveSettingsApi(currentState);
-            
-            // Success
-            Object.assign(initialState, currentState); // Commit changes
-            elements.saveBar.classList.add('hidden-bar');
-            
-            // Update Sidebar Avatar immediately to reflect "Global" change
-            elements.previews.sidebarAvatar.src = currentState.avatar;
+        // --- State Management ---
+        const DEFAULT_AVATAR = "https://robohash.org/admin?set=set4&bgset=bg2";
 
-            showModalDialog("Configuration Updated", "System protocols have been successfully patched.", "success");
+        // Store original state for diffing
+        const initialState = {
+            username: "Operator.X",
+            email: "operator.x@university.edu",
+            avatar: DEFAULT_AVATAR,
+            notifyEmail: true,
+            notifyChat: true,
+            mfa: false,
+            timeout: "60"
+        };
 
-        } catch (err) {
-            showModalDialog("Error", "Failed to reach encryption server. Changes not saved.", "error");
-        } finally {
-            isSaving = false;
-            elements.buttons.save.innerHTML = originalBtnText;
-            elements.buttons.save.disabled = false;
-        }
-    }
+        let currentState = { ...initialState };
+        let isSaving = false;
 
-    function revertChanges() {
-        Object.assign(currentState, initialState);
-        
-        // Restore UI inputs
-        elements.inputs.username.value = initialState.username;
-        elements.inputs.notifyEmail.checked = initialState.notifyEmail;
-        elements.inputs.notifyChat.checked = initialState.notifyChat;
-        elements.inputs.mfa.checked = initialState.mfa;
-        elements.inputs.timeout.value = initialState.timeout;
-        elements.previews.avatar.src = initialState.avatar;
-        
-        checkForChanges();
-    }
+        // DOM Elements
+        const elements = {
+            saveBar: document.getElementById('save-bar'),
+            inputs: {
+                username: document.getElementById('input-username'),
+                notifyEmail: document.getElementById('toggle-email'),
+                notifyChat: document.getElementById('toggle-chat'),
+                mfa: document.getElementById('toggle-mfa'),
+                timeout: document.getElementById('select-timeout'),
+                avatar: document.getElementById('avatar-upload')
+            },
+            buttons: {
+                save: document.getElementById('btn-save'),
+                discard: document.getElementById('btn-discard'),
+                resetAvatar: document.getElementById('reset-avatar-btn'),
+                changePass: document.getElementById('btn-change-pass'),
+                logoutAll: document.getElementById('btn-logout-all')
+            },
+            previews: {
+                avatar: document.getElementById('avatar-preview'),
+                sidebarAvatar: document.getElementById('sidebar-avatar'),
+                mfaBadge: document.getElementById('mfa-badge')
+            },
+            modal: {
+                el: document.getElementById('app-modal'),
+                title: document.getElementById('modal-title'),
+                msg: document.getElementById('modal-msg'),
+                confirm: document.getElementById('modal-confirm'),
+                cancel: document.getElementById('modal-cancel'),
+                icon: document.getElementById('modal-icon'),
+                iconBg: document.getElementById('modal-icon-bg')
+            },
+            tabs: document.querySelectorAll('.tab-btn'),
+            contents: document.querySelectorAll('.tab-content')
+        };
 
-    // --- Modal System ---
-    function showModalDialog(title, msg, type = "info") {
-        return new Promise((resolve) => {
-            elements.modal.title.textContent = title;
-            elements.modal.msg.textContent = msg;
-            
-            // Style based on type
-            if (type === 'error') {
-                elements.modal.iconBg.className = "p-2 rounded-lg bg-red-500/20 text-red-400";
-                elements.modal.confirm.className = "px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors";
-                elements.modal.icon.setAttribute('data-lucide', 'alert-triangle');
-            } else if (type === 'success') {
-                elements.modal.iconBg.className = "p-2 rounded-lg bg-emerald-500/20 text-emerald-400";
-                elements.modal.confirm.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors";
-                elements.modal.icon.setAttribute('data-lucide', 'check-circle');
+        // --- Logic ---
+
+        function checkForChanges() {
+            const hasChanges = JSON.stringify(initialState) !== JSON.stringify(currentState);
+
+            if (hasChanges) {
+                elements.saveBar.classList.remove('hidden-bar');
             } else {
-                 elements.modal.iconBg.className = "p-2 rounded-lg bg-brand-500/20 text-brand-400";
-                 elements.modal.confirm.className = "px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-sm font-bold transition-colors";
-                 elements.modal.icon.setAttribute('data-lucide', 'info');
+                elements.saveBar.classList.add('hidden-bar');
             }
+
+            // Update MFA Badge UI specifically
+            if (currentState.mfa) {
+                elements.previews.mfaBadge.className = "px-2 py-0.5 rounded bg-brand-500/20 text-brand-400 text-[10px] font-bold";
+                elements.previews.mfaBadge.textContent = "ACTIVE";
+            } else {
+                elements.previews.mfaBadge.className = "px-2 py-0.5 rounded bg-gray-700 text-gray-300 text-[10px] font-bold";
+                elements.previews.mfaBadge.textContent = "INACTIVE";
+            }
+        }
+
+        function updateState(key, value) {
+            currentState[key] = value;
+            checkForChanges();
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                elements.previews.avatar.src = ev.target.result;
+                // For mock purposes, we store the big base64 string
+                updateState('avatar', ev.target.result);
+            }
+            reader.readAsDataURL(file);
+        }
+
+        // --- Mock API with Exponential Backoff ---
+        async function saveSettingsApi(data) {
+            const apiKey = ""; // Implicitly provided by env
+            // Using a generative model to simulate a "Process" just to adhere to the instruction
+            // In reality, this would be a PUT request to a backend.
+            // We will simulate the network delay.
+
+            return new Promise((resolve, reject) => {
+                let attempt = 0;
+                const tryReq = () => {
+                    attempt++;
+                    const delay = Math.pow(2, attempt) * 200; // 200, 800, 1800...
+                    setTimeout(() => {
+                        // 90% chance of success
+                        if (Math.random() > 0.1) resolve({ success: true });
+                        else if (attempt < 3) tryReq(); // Retry
+                        else reject({ error: "Network timeout" });
+                    }, delay);
+                }
+                tryReq();
+            });
+        }
+
+        async function executeSave() {
+            if (isSaving) return;
+            isSaving = true;
+
+            const originalBtnText = elements.buttons.save.innerHTML;
+            elements.buttons.save.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+            elements.buttons.save.disabled = true;
             lucide.createIcons();
 
-            // Show
-            elements.modal.el.classList.remove('hidden');
-            setTimeout(() => {
-                elements.modal.el.classList.remove('opacity-0');
-                elements.modal.el.querySelector('.glass-card').classList.remove('scale-95');
-            }, 10);
+            try {
+                await saveSettingsApi(currentState);
 
-            // Handlers
-            const close = (result) => {
-                elements.modal.el.classList.add('opacity-0');
-                elements.modal.el.querySelector('.glass-card').classList.add('scale-95');
-                setTimeout(() => {
-                    elements.modal.el.classList.add('hidden');
-                    resolve(result);
-                }, 300);
-            };
+                // Success
+                Object.assign(initialState, currentState); // Commit changes
+                elements.saveBar.classList.add('hidden-bar');
 
-            elements.modal.confirm.onclick = () => close(true);
-            elements.modal.cancel.onclick = () => close(false);
-            if(type === 'success') elements.modal.cancel.style.display = 'none'; // Only confirm for success
-            else elements.modal.cancel.style.display = 'block';
-        });
-    }
+                // Update Sidebar Avatar immediately to reflect "Global" change
+                elements.previews.sidebarAvatar.src = currentState.avatar;
 
+                showModalDialog("Configuration Updated", "System protocols have been successfully patched.", "success");
 
-    // --- Event Listeners ---
-    function init() {
-        // Inputs
-        elements.inputs.username.oninput = (e) => updateState('username', e.target.value);
-        elements.inputs.notifyEmail.onchange = (e) => updateState('notifyEmail', e.target.checked);
-        elements.inputs.notifyChat.onchange = (e) => updateState('notifyChat', e.target.checked);
-        elements.inputs.mfa.onchange = (e) => updateState('mfa', e.target.checked);
-        elements.inputs.timeout.onchange = (e) => updateState('timeout', e.target.value);
-        elements.inputs.avatar.onchange = handleFileSelect;
-
-        // Buttons
-        elements.buttons.resetAvatar.onclick = () => {
-            elements.previews.avatar.src = DEFAULT_AVATAR;
-            updateState('avatar', DEFAULT_AVATAR);
-        };
-        elements.buttons.save.onclick = executeSave;
-        elements.buttons.discard.onclick = revertChanges;
-        
-        elements.buttons.changePass.onclick = () => showModalDialog("Security Check", "Redirecting to Identity Provider for credential rotation...", "info");
-        elements.buttons.logoutAll.onclick = () => showModalDialog("Critical Action", "Are you sure you want to terminate all active sessions? You will be signed out immediately.", "error");
-
-        // Tabs
-        elements.tabs.forEach(btn => {
-            btn.onclick = () => {
-                // Style Tabs
-                elements.tabs.forEach(b => {
-                    b.classList.remove('bg-brand-500/10', 'text-brand-400', 'border-brand-500/20');
-                    b.classList.add('text-gray-400', 'border-transparent');
-                });
-                btn.classList.add('bg-brand-500/10', 'text-brand-400', 'border-brand-500/20');
-                btn.classList.remove('text-gray-400', 'border-transparent');
-                
-                // Show Content
-                const target = btn.dataset.target;
-                elements.contents.forEach(c => c.classList.add('hidden'));
-                document.getElementById(`tab-${target}`).classList.remove('hidden');
+            } catch (err) {
+                showModalDialog("Error", "Failed to reach encryption server. Changes not saved.", "error");
+            } finally {
+                isSaving = false;
+                elements.buttons.save.innerHTML = originalBtnText;
+                elements.buttons.save.disabled = false;
             }
-        });
-    }
+        }
 
-    window.onload = init;
+        function revertChanges() {
+            Object.assign(currentState, initialState);
 
-  </script>
+            // Restore UI inputs
+            elements.inputs.username.value = initialState.username;
+            elements.inputs.notifyEmail.checked = initialState.notifyEmail;
+            elements.inputs.notifyChat.checked = initialState.notifyChat;
+            elements.inputs.mfa.checked = initialState.mfa;
+            elements.inputs.timeout.value = initialState.timeout;
+            elements.previews.avatar.src = initialState.avatar;
 
+            checkForChanges();
+        }
+
+        // --- Modal System ---
+        function showModalDialog(title, msg, type = "info") {
+            return new Promise((resolve) => {
+                elements.modal.title.textContent = title;
+                elements.modal.msg.textContent = msg;
+
+                // Style based on type
+                if (type === 'error') {
+                    elements.modal.iconBg.className = "p-2 rounded-lg bg-red-500/20 text-red-400";
+                    elements.modal.confirm.className = "px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-sm font-bold transition-colors";
+                    elements.modal.icon.setAttribute('data-lucide', 'alert-triangle');
+                } else if (type === 'success') {
+                    elements.modal.iconBg.className = "p-2 rounded-lg bg-emerald-500/20 text-emerald-400";
+                    elements.modal.confirm.className = "px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition-colors";
+                    elements.modal.icon.setAttribute('data-lucide', 'check-circle');
+                } else {
+                    elements.modal.iconBg.className = "p-2 rounded-lg bg-brand-500/20 text-brand-400";
+                    elements.modal.confirm.className = "px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-lg text-sm font-bold transition-colors";
+                    elements.modal.icon.setAttribute('data-lucide', 'info');
+                }
+                lucide.createIcons();
+
+                // Show
+                elements.modal.el.classList.remove('hidden');
+                setTimeout(() => {
+                    elements.modal.el.classList.remove('opacity-0');
+                    elements.modal.el.querySelector('.glass-card').classList.remove('scale-95');
+                }, 10);
+
+                // Handlers
+                const close = (result) => {
+                    elements.modal.el.classList.add('opacity-0');
+                    elements.modal.el.querySelector('.glass-card').classList.add('scale-95');
+                    setTimeout(() => {
+                        elements.modal.el.classList.add('hidden');
+                        resolve(result);
+                    }, 300);
+                };
+
+                elements.modal.confirm.onclick = () => close(true);
+                elements.modal.cancel.onclick = () => close(false);
+                if (type === 'success') elements.modal.cancel.style.display = 'none'; // Only confirm for success
+                else elements.modal.cancel.style.display = 'block';
+            });
+        }
+
+
+        // --- Event Listeners ---
+        function init() {
+            // Inputs
+            elements.inputs.username.oninput = (e) => updateState('username', e.target.value);
+            elements.inputs.notifyEmail.onchange = (e) => updateState('notifyEmail', e.target.checked);
+            elements.inputs.notifyChat.onchange = (e) => updateState('notifyChat', e.target.checked);
+            elements.inputs.mfa.onchange = (e) => updateState('mfa', e.target.checked);
+            elements.inputs.timeout.onchange = (e) => updateState('timeout', e.target.value);
+            elements.inputs.avatar.onchange = handleFileSelect;
+
+            // Buttons
+            elements.buttons.resetAvatar.onclick = () => {
+                elements.previews.avatar.src = DEFAULT_AVATAR;
+                updateState('avatar', DEFAULT_AVATAR);
+            };
+            elements.buttons.save.onclick = executeSave;
+            elements.buttons.discard.onclick = revertChanges;
+
+            elements.buttons.changePass.onclick = () => showModalDialog("Security Check", "Redirecting to Identity Provider for credential rotation...", "info");
+            elements.buttons.logoutAll.onclick = () => showModalDialog("Critical Action", "Are you sure you want to terminate all active sessions? You will be signed out immediately.", "error");
+
+            // Tabs
+            elements.tabs.forEach(btn => {
+                btn.onclick = () => {
+                    // Style Tabs
+                    elements.tabs.forEach(b => {
+                        b.classList.remove('bg-brand-500/10', 'text-brand-400', 'border-brand-500/20');
+                        b.classList.add('text-gray-400', 'border-transparent');
+                    });
+                    btn.classList.add('bg-brand-500/10', 'text-brand-400', 'border-brand-500/20');
+                    btn.classList.remove('text-gray-400', 'border-transparent');
+
+                    // Show Content
+                    const target = btn.dataset.target;
+                    elements.contents.forEach(c => c.classList.add('hidden'));
+                    document.getElementById(`tab-${target}`).classList.remove('hidden');
+                }
+            });
+        }
+
+        window.onload = init;
+
+    </script>
+    <script src="js/integration.js"></script>
 </body>
+
 </html>

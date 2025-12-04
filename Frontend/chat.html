@@ -466,8 +466,8 @@
                 <img id="profile-modal-avatar" src="" class="w-full h-full rounded-full bg-black object-cover">
             </div>
 
-            <h3 class="text-xl font-display font-bold text-white mb-1" id="profile-modal-name">User Name</h3>
-            <p class="text-sm font-mono text-brand-400 mb-6" id="profile-modal-id">ID: ...</p>
+            <h3 class="text-xl font-display font-bold text-white mb-1" id="profile-modal-name">Loading...</h3>
+            <p class="text-sm font-mono text-brand-400 mb-6" id="profile-modal-id">ID: Loading...</p>
 
             <div class="grid grid-cols-2 gap-4 mb-6 text-left bg-white/5 p-4 rounded-xl border border-white/5">
                 <div>
@@ -593,6 +593,29 @@
     <script>
         // --- STATE & DATA ---
         const STORAGE_KEYS = { CHATS: 'nexus_chats_data_v2', USER: 'nexus_user_data_v2' };
+        // --- DOM ELEMENTS MAPPING (MISSING IN YOUR CODE) ---
+        const DOM = {
+            globalAvatar: document.getElementById('global-user-avatar'),
+            globalStatusDot: document.getElementById('global-status-dot'),
+            chatListContainer: document.getElementById('chat-list-container'),
+            searchInput: document.getElementById('search-input'),
+            messagesContainer: document.getElementById('messages-container'),
+            chatTitle: document.getElementById('chat-title'),
+            chatIdDisplay: document.getElementById('chat-id-display'),
+            chatAvatar: document.getElementById('chat-avatar'),
+            chatStatusDot: document.getElementById('chat-status-dot'),
+            welcomeContainer: document.getElementById('welcome-container'),
+            activeChatInterface: document.getElementById('active-chat-interface'),
+            chatWindowCol: document.getElementById('chat-window-col'),
+            msgInput: document.getElementById('new-message-input'),
+            sendBtn: document.getElementById('send-button'),
+            micIcon: document.getElementById('mic-icon'),
+            sendIcon: document.getElementById('send-icon'),
+            addContactModal: document.getElementById('add-contact-modal'),
+            userProfileModal: document.getElementById('user-profile-modal'),
+            channelInfoModal: document.getElementById('channel-info-modal'),
+            statusDropdown: document.getElementById('status-dropdown')
+        };
         const DEFAULT_AVATAR = "https://robohash.org/default?set=set4&bgset=bg2";
 
         let currentUserId = 'SEC-' + crypto.randomUUID().substring(0, 4).toUpperCase();
@@ -600,47 +623,8 @@
         let currentUserStatus = 'Active';
         let currentUserRole = 'Level 4 Security';
         let activeChatId = null;
-        let mockChats = {};
+        let mockChats = {}; // Empty chat list for new accounts - integration.js will load real friends
 
-        // Default Contacts
-        const DEFAULT_MOCK_USERS = {
-            'SEC-884': { name: 'Operator.X', status: 'Active', role: 'Security' }, // Self
-            'SEC-994': { name: 'Dr. Vega', status: 'DND', role: 'Research Lead' },
-            'SEC-102': { name: 'Agent Z9', status: 'Away', role: 'Field Agent' },
-            'SYS-BOT': { name: 'System AI', status: 'Active', role: 'Automated' }
-        };
-
-        // --- DOM REFERENCES ---
-        const DOM = {
-            chatListCol: document.getElementById('chat-list-col'),
-            chatWindowCol: document.getElementById('chat-window-col'),
-            welcomeContainer: document.getElementById('welcome-container'),
-            activeChatInterface: document.getElementById('active-chat-interface'),
-            chatListContainer: document.getElementById('chat-list-container'),
-            messagesContainer: document.getElementById('messages-container'),
-            searchInput: document.getElementById('search-input'),
-            msgInput: document.getElementById('new-message-input'),
-            sendBtn: document.getElementById('send-button'),
-            micIcon: document.getElementById('mic-icon'),
-            sendIcon: document.getElementById('send-icon'),
-
-            // Modals
-            addContactModal: document.getElementById('add-contact-modal'),
-            userProfileModal: document.getElementById('user-profile-modal'),
-            channelInfoModal: document.getElementById('channel-info-modal'),
-            settingsModal: document.getElementById('settings-modal'),
-
-            // Headers
-            chatTitle: document.getElementById('chat-title'),
-            chatAvatar: document.getElementById('chat-avatar'),
-            chatStatusDot: document.getElementById('chat-status-dot'),
-            chatIdDisplay: document.getElementById('chat-id-display'),
-
-            // Global User
-            globalAvatar: document.getElementById('global-user-avatar'),
-            globalStatusDot: document.getElementById('global-status-dot'),
-            statusDropdown: document.getElementById('status-dropdown')
-        };
 
         // --- UTILS ---
         const getAvatar = (id) => `https://robohash.org/${id}?set=set4&bgset=bg2`;
@@ -661,19 +645,7 @@
                     mockChats = c;
                 } else {
                     // Init defaults
-                    mockChats = {
-                        'SEC-994': {
-                            contactId: 'SEC-994', unread: 2, messages: [
-                                { senderId: 'SEC-994', text: 'Dr. Vega: The quantum encryption keys are unstable.', timestamp: Date.now() - 3600000 },
-                                { senderId: 'SEC-994', text: 'I need authorization to reset the core.', timestamp: Date.now() - 3500000 }
-                            ]
-                        },
-                        'SYS-BOT': {
-                            contactId: 'SYS-BOT', unread: 0, messages: [
-                                { senderId: 'SYS-BOT', text: 'System Online. Secure channel active.', timestamp: Date.now() - 86400000 }
-                            ]
-                        }
-                    };
+                    mockChats = {}; // Empty chat list for new accounts - integration.js will load real friends
                 }
             } catch (e) { console.error("Load Error", e); }
         }
@@ -930,6 +902,7 @@
             });
         };
     </script>
+    <script src="js/integration.js"></script>
 </body>
 
 </html>
