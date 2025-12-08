@@ -1,24 +1,24 @@
 /**
  * SAPCCA Authentication Utility
- * Handles token and user data management with multi-tab support
- * TOKEN: localStorage (shared - for easy global logout)
+ * Handles token and user data management with TRUE multi-tab isolation
+ * TOKEN: sessionStorage (tab-specific - allows different accounts per tab)
  * USER DATA: sessionStorage (tab-specific - prevents conflicts)
  */
 
 const Auth = {
     // Get authentication token
     getToken() {
-        return localStorage.getItem('token');
+        return sessionStorage.getItem('token');
     },
 
     // Set authentication token
     setToken(token) {
-        localStorage.setItem('token', token);
+        sessionStorage.setItem('token', token);
     },
 
     // Remove authentication token
     removeToken() {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
     },
 
     // Get stored user data (from sessionStorage for tab isolation)

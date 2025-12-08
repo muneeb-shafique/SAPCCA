@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const addFriendBtn = document.createElement('button');
         addFriendBtn.id = 'btn-add-friend';
         addFriendBtn.className = 'flex items-center gap-2 px-4 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition-colors shadow-lg shadow-brand-500/20';
-        addFriendBtn.innerHTML = '<i data-lucide="user-plus" class="w-4 h-" 4"></i> Send Request';
+        addFriendBtn.innerHTML = '<i data-lucide="user-plus" class="w-4 h-4"></i> Send Request';
         addFriendBtn.onclick = showAddFriendModal;
         headerDiv.appendChild(addFriendBtn);
         lucide.createIcons();
@@ -26,15 +26,15 @@ document.addEventListener('DOMContentLoaded', function () {
                             <i data-lucide="user-plus" class="w-8 h-8"></i>
                         </div>
                         <h2 class="text-2xl font-display font-bold text-white mb-2">Send Friend Request</h2>
-                        <p class="text-gray-400 text-sm">Enter the user ID to send a connection request</p>
+                        <p class="text-gray-400 text-sm">Enter username, email, registration number, or user ID</p>
                     </div>
                     
                     <form id="send-request-form" class="space-y-4">
                         <div class="space-y-2">
-                            <label class="text-xs font-mono text-gray-500 uppercase">User ID</label>
-                            <input type="number" id="friend-user-id" required 
+                            <label class="text-xs font-mono text-gray-500 uppercase">User Identifier</label>
+                            <input type="text" id="friend-user-id" required 
                                 class="w-full p-4 rounded-xl bg-black/30 border border-white/10 text-white focus:border-brand-500 focus:outline-none transition-all"
-                                placeholder="Enter user ID (e.g., 1, 2, 3)">
+                                placeholder="Enter username, email, registration number, or ID">
                         </div>
                         
                         <div class="flex gap-3">
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
         form.onsubmit = async function (e) {
             e.preventDefault();
 
-            const receiverId = parseInt(document.getElementById('friend-user-id').value);
+            const identifier = document.getElementById('friend-user-id').value.trim();
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.textContent;
 
@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', function () {
             lucide.createIcons();
 
             try {
-                const token = localStorage.getItem('token');
+                const token = sessionStorage.getItem('token');
                 const response = await fetch('/api/friends/request', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ receiver_id: receiverId })
+                    body: JSON.stringify({ identifier: identifier })
                 });
 
                 const data = await response.json();

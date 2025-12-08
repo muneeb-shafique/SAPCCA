@@ -6,6 +6,7 @@ class User(db.Model):
     email = db.Column(db.String(120), unique=True)
     password = db.Column(db.String(200))
     display_name = db.Column(db.String(100))
+    registration_number = db.Column(db.String(50), unique=True, nullable=True)
     avatar_url = db.Column(db.String(300), default="")
     otp_code = db.Column(db.String(10), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)

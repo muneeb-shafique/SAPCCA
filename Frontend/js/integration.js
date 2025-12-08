@@ -9,7 +9,7 @@
 
     // ===== AUTHENTICATION CHECK =====
     function checkAuth() {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const currentPage = window.location.pathname;
 
         // Redirect to welcome if not authenticated
@@ -33,7 +33,7 @@
     const API_BASE = '';
 
     async function apiRequest(endpoint, options = {}) {
-        const token = localStorage.getItem('token');
+        const token = sessionStorage.getItem('token');
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers
@@ -82,7 +82,7 @@
     }
 
     function logout() {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         sessionStorage.clear(); // Clear all session data
         window.location.href = '/welcome.html';
     }
@@ -521,11 +521,13 @@
 
             const nameInput = document.getElementById('input-username');
             const emailInput = document.getElementById('input-email');
+            const regNumberInput = document.getElementById('input-reg-number');
             const avatarPreview = document.getElementById('avatar-preview');
-            const userIdInput = document.querySelector('input[value="884-A2-SECURE"]');
+            const userIdInput = document.getElementById('input-clearance-id');
 
             if (nameInput) nameInput.value = profile.name || '';
             if (emailInput) emailInput.value = profile.email || '';
+            if (regNumberInput) regNumberInput.value = profile.registration_number || 'N/A';
             if (avatarPreview) avatarPreview.src = profile.avatar || getAvatar(profile.email);
             if (userIdInput) {
                 userIdInput.value = `ID: ${userId}`;

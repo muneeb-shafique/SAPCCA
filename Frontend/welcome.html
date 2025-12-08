@@ -605,8 +605,8 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Store token and user info
-                    localStorage.setItem('token', data.token);
+                    // Store token and user info (sessionStorage for tab-specific sessions)
+                    sessionStorage.setItem('token', data.token);
                     sessionStorage.setItem('user', JSON.stringify(data.user));
 
                     showToast('Success', 'Login successful!');
@@ -696,8 +696,8 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Store token and user info
-                    localStorage.setItem('token', data.token);
+                    // Store token and user info (sessionStorage for tab-specific sessions)
+                    sessionStorage.setItem('token', data.token);
                     sessionStorage.setItem('user', JSON.stringify(data.user));
 
                     showToast('Verified', 'Account verified successfully!');

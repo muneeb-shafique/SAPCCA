@@ -29,6 +29,7 @@ def register():
         # Store registration data temporarily (NOT in database yet)
         pending_registrations[email] = {
             "name": data["name"],
+            "registration_number": data.get("registration_number"),  # Optional field
             "password": data["password"],  # Will be hashed on verification
             "otp_code": otp_code,
             "otp_expiry": otp_expiry
@@ -84,6 +85,7 @@ def verify_otp():
             email=email,
             password=hashed_password,
             display_name=pending["name"],
+            registration_number=pending.get("registration_number"),
             is_verified=True,
             otp_code=None,
             otp_expiry=None

@@ -18,6 +18,7 @@ def profile():
         "id": user.id,
         "name": user.display_name,
         "email": user.email,
+        "registration_number": user.registration_number,
         "avatar": user.avatar_url
     }), 200
 

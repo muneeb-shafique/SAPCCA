@@ -11,7 +11,7 @@ def get_current_user_id():
     return int(get_jwt_identity())
 
 # -----------------------------------------------------------------
-# 1. SEND REQUEST (Ensures new requests have status='pending')
+# 1. SEND REQUEST (Supports ID, email, username, or registration_number)
 # -----------------------------------------------------------------
 @friends_bp.post("/request")
 @jwt_required()
@@ -21,18 +21,38 @@ def send_friend_request():
     # Use try-except for robust JSON parsing
     try:
         data = request.json
-        receiver_id = int(data["receiver_id"])
+        identifier = str(data["identifier"]).strip()
     except (TypeError, KeyError, ValueError):
-        return jsonify({"error": "Invalid or missing 'receiver_id' in request body"}), 400
+        return jsonify({"error": "Invalid or missing 'identifier' in request body"}), 400
+
+    # Try to find the receiver by different methods
+    receiver = None
+    
+    # Try as ID (numeric)
+    if identifier.isdigit():
+        receiver = User.query.get(int(identifier))
+    
+    # Try as email
+    if not receiver:
+        receiver = User.query.filter_by(email=identifier).first()
+    
+    # Try as display_name
+    if not receiver:
+        receiver = User.query.filter_by(display_name=identifier).first()
+    
+    # Try as registration_number
+    if not receiver:
+        receiver = User.query.filter_by(registration_number=identifier).first()
+    
+    # If still not found, return error
+    if not receiver:
+        return jsonify({"error": "User not found with the provided identifier"}), 404
+    
+    receiver_id = receiver.id
 
     # Basic checks
     if sender_id == receiver_id:
         return jsonify({"error": "Cannot send request to self"}), 400
-
-    # Ensure receiver exists
-    receiver = User.query.get(receiver_id)
-    if not receiver:
-        return jsonify({"error": "Receiver not found"}), 404
 
     # Check for existing request (pending, accepted, or reversed)
     # A single query checks for any relationship/request between the two users
