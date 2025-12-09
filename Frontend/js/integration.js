@@ -316,7 +316,7 @@
                 } else if (tabName === 'outgoing') {
                     await loadOutgoingRequests();
                 } else if (tabName === 'ignored') {
-                    showEmptyState('No ignored requests');
+                    await loadIgnoredRequests();
                 }
             });
         });
@@ -449,6 +449,61 @@
         }
     }
 
+    async function loadIgnoredRequests() {
+        try {
+            const response = await apiRequest('/api/friends/ignored');
+            const requests = response.requests || [];
+
+            const container = document.getElementById('request-list');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (requests.length === 0) {
+                container.innerHTML = `
+                    <div class="glass-card p-12 rounded-2xl text-center">
+                        <i data-lucide="user-x" class="w-16 h-16 text-gray-600 mx-auto mb-4"></i>
+                        <h3 class="text-xl font-bold text-white mb-2">No Ignored Requests</h3>
+                        <p class="text-gray-400">You haven't ignored any friend requests.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            requests.forEach(req => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-5 rounded-xl flex flex-col md:flex-row items-center gap-6 group hover:bg-white/5 transition-colors border-l-4 border-l-red-500';
+                card.id = `req-${req.request_id}`;
+                card.innerHTML = `
+                    <div class="relative flex-shrink-0">
+                        <div class="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-red-400 to-gray-500">
+                            <img src="${getAvatar(req.sender_id)}" class="w-full h-full rounded-full bg-black object-cover opacity-60">
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 text-center md:text-left">
+                        <h3 class="text-lg font-bold text-gray-300 font-display">${req.sender_name}</h3>
+                        <p class="text-sm text-gray-500">ID: ${req.sender_id}</p>
+                        <p class="text-xs text-gray-600 mt-1"><i data-lucide="x-circle" class="w-3 h-3 inline"></i> Rejected on ${new Date(req.timestamp).toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <button onclick="window.deleteIgnoredRequest('${req.request_id}')" class="flex-1 md:flex-none py-2 px-4 rounded-lg border border-red-500/20 text-red-400 hover:bg-red-500/10 transition-all text-sm font-medium">
+                            Delete
+                        </button>
+                    </div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            lucide.createIcons();
+        } catch (error) {
+            console.error('Failed to load ignored requests:', error);
+        }
+    }
+
     function setupFriendRequestHandlers() {
         window.acceptFriendRequest = async (requestId) => {
             try {
@@ -501,6 +556,25 @@
                 setTimeout(() => loadOutgoingRequests(), 500);
             } catch (error) {
                 console.error('Failed to cancel request:', error);
+            }
+        };
+
+        window.deleteIgnoredRequest = async (requestId) => {
+            try {
+                // Use the delete endpoint to permanently remove the ignored request
+                await apiRequest('/api/friends/delete', {
+                    method: 'POST',
+                    body: JSON.stringify({ request_id: parseInt(requestId) })
+                });
+
+                showToast('Info', 'Ignored request deleted');
+
+                const card = document.getElementById(`req-${requestId}`);
+                if (card) card.remove();
+
+                setTimeout(() => loadIgnoredRequests(), 500);
+            } catch (error) {
+                console.error('Failed to delete ignored request:', error);
             }
         };
     }

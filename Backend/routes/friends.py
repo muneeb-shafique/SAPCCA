@@ -128,7 +128,7 @@ def get_outgoing_requests():
     return jsonify({"requests": requests_list})
 
 # -----------------------------------------------------------------
-# 4. REJECT REQUEST (Deletes the record)
+# 4. REJECT REQUEST (Marks request as 'rejected' instead of deleting)
 # -----------------------------------------------------------------
 @friends_bp.post("/reject")
 @jwt_required()
@@ -149,8 +149,8 @@ def reject_friend_request():
     if request_to_reject.receiver_id != user_id:
         return jsonify({"error": "Unauthorized action on this request"}), 403
     
-    # Delete the request
-    db.session.delete(request_to_reject)
+    # Mark as rejected instead of deleting
+    request_to_reject.status = 'rejected'
     db.session.commit()
 
     return jsonify({"message": "Friend request rejected"}), 200
@@ -249,3 +249,55 @@ def get_friends_list():
             })
 
     return jsonify(friends_data), 200
+
+# -----------------------------------------------------------------
+# 8. LIST IGNORED/REJECTED REQUESTS
+# -----------------------------------------------------------------
+@friends_bp.get("/ignored")
+@jwt_required()
+def get_ignored_requests():
+    user_id = get_current_user_id()
+    
+    # Filter for requests where user is the receiver AND status is 'rejected'
+    ignored_requests = FriendRequest.query.filter_by(receiver_id=user_id, status='rejected').all()
+    
+    requests_list = []
+    for req in ignored_requests:
+        sender = User.query.get(req.sender_id)
+        requests_list.append({
+            "request_id": req.id,
+            "sender_id": req.sender_id,
+            "sender_name": sender.display_name if sender else "Unknown User",
+            "sender_avatar": sender.avatar_url if sender else "",
+            "timestamp": req.timestamp.isoformat() if req.timestamp else None
+        })
+
+    return jsonify({"requests": requests_list})
+
+# -----------------------------------------------------------------
+# 9. DELETE IGNORED REQUEST (Permanently removes rejected request)
+# -----------------------------------------------------------------
+@friends_bp.post("/delete")
+@jwt_required()
+def delete_friend_request():
+    user_id = get_current_user_id()
+    
+    try:
+        request_id = request.json["request_id"]
+    except (TypeError, KeyError):
+        return jsonify({"error": "Missing 'request_id' in request body"}), 400
+
+    request_to_delete = FriendRequest.query.get(request_id)
+
+    if not request_to_delete:
+        return jsonify({"error": "Friend request not found"}), 404
+
+    # Security check: Ensure the current user is the intended receiver
+    if request_to_delete.receiver_id != user_id:
+        return jsonify({"error": "Unauthorized action on this request"}), 403
+    
+    # Delete the request
+    db.session.delete(request_to_delete)
+    db.session.commit()
+
+    return jsonify({"message": "Friend request deleted"}), 200
