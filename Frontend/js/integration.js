@@ -202,6 +202,11 @@
 
     async function openChat(friend) {
         activeChat = friend;
+
+        // Set activeChatId for chat.html compatibility (for file uploads)
+        window.activeChatId = friend.id;
+        console.log('🔵 openChat - Set window.activeChatId to:', window.activeChatId);
+
         document.getElementById('chat-title').textContent = friend.display_name;
         document.getElementById('chat-id-display').textContent = friend.id;
         document.getElementById('chat-avatar').src = getAvatar(friend.id);
@@ -354,10 +359,17 @@
 
         // File upload integration - override the sendFileMessage function
         window.sendFileMessageViaAPI = async (fileData, fileName, fileType, fileCategory) => {
-            if (!activeChat) return;
+            console.log('🔵 sendFileMessageViaAPI called with:', { fileName, fileType, fileCategory, fileSizeKB: Math.round(fileData.length / 1024) });
+            console.log('🔵 activeChat:', activeChat);
+
+            if (!activeChat) {
+                console.error('❌ activeChat is not set! Cannot send file.');
+                return;
+            }
 
             try {
-                await apiRequest('/api/messages/send', {
+                console.log('📤 Sending file to API...');
+                const response = await apiRequest('/api/messages/send', {
                     method: 'POST',
                     body: JSON.stringify({
                         receiver_id: activeChat.id,
@@ -368,14 +380,17 @@
                         file_category: fileCategory
                     })
                 });
+                console.log('✅ File sent successfully:', response);
 
+                console.log('🔄 Reloading chat history...');
                 await loadChatHistory(activeChat.id);
+                console.log('✅ Chat history reloaded');
 
                 if (typeof showToast === 'function') {
                     showToast('File Sent', `${fileName} uploaded successfully`);
                 }
             } catch (error) {
-                console.error('Failed to send file:', error);
+                console.error('❌ Failed to send file:', error);
                 if (typeof showToast === 'function') {
                     showToast('Error', 'Failed to send file');
                 }

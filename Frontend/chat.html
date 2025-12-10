@@ -371,7 +371,7 @@
         </div>
 
         <!-- RIGHT COL: Chat Window -->
-        <div id="chat-window-col" class="chat-window-col flex flex-col bg-[#050505] relative">
+        <div id="chat-window-col" class="chat-window-col flex flex-col bg-[#050505] relative h-full overflow-hidden">
             <div class="absolute inset-0 bg-grid-overlay opacity-50 pointer-events-none"></div>
 
             <!-- A. Welcome / Empty State -->
@@ -723,7 +723,11 @@
         let currentUserName = "Operator.X";
         let currentUserStatus = 'Active';
         let currentUserRole = 'Level 4 Security';
+
+        // Make activeChatId accessible globally for integration.js
+        window.activeChatId = null;
         let activeChatId = null;
+
         let mockChats = {}; // Empty chat list for new accounts - integration.js will load real friends
 
 
@@ -906,6 +910,7 @@
 
         function openChat(chatId) {
             activeChatId = chatId;
+            window.activeChatId = chatId; // Keep window version in sync
             mockChats[chatId].unread = 0;
             saveState();
             renderChatList();
@@ -1088,6 +1093,7 @@
             let pendingFileCategory = null;
 
             window.selectFileType = (category) => {
+                console.log('📁 File type selected:', category);
                 const inputId = `file-input-${category}`;
                 const fileInput = document.getElementById(inputId);
 
@@ -1095,17 +1101,22 @@
                     const file = e.target.files[0];
                     if (!file) return;
 
+                    console.log('📄 File selected:', { name: file.name, size: file.size, type: file.type });
+
                     // Validate file size (5MB)
                     if (file.size > 5 * 1024 * 1024) {
+                        console.error('❌ File too large:', file.size);
                         showToast('Error', 'File too large. Maximum size is 5MB');
                         e.target.value = '';
                         return;
                     }
 
+                    console.log('📖 Reading file as base64...');
                     // Read file as base64
                     const reader = new FileReader();
                     reader.onload = (event) => {
                         const base64Data = event.target.result;
+                        console.log('✅ File read successfully, size:', Math.round(base64Data.length / 1024), 'KB');
 
                         // Store file info
                         pendingFile = {
@@ -1116,9 +1127,12 @@
                             size: file.size
                         };
 
+                        console.log('💾 Pending file stored:', { name: pendingFile.name, category: pendingFile.category });
+
                         // Close modal
                         toggleModal(fileUploadModal, false);
 
+                        console.log('🚀 Calling sendFileMessage...');
                         // Send file immediately
                         sendFileMessage();
 
@@ -1127,6 +1141,7 @@
                     };
 
                     reader.onerror = () => {
+                        console.error('❌ Failed to read file');
                         showToast('Error', 'Failed to read file');
                         e.target.value = '';
                     };
@@ -1139,10 +1154,26 @@
 
             // Send file message
             function sendFileMessage() {
-                if (!pendingFile || !activeChatId) return;
+                console.log('📨 sendFileMessage called');
+
+                // Use window.activeChatId if local activeChatId is not set
+                const chatId = activeChatId || window.activeChatId;
+
+                console.log('   - pendingFile:', pendingFile ? { name: pendingFile.name, category: pendingFile.category } : 'null');
+                console.log('   - local activeChatId:', activeChatId);
+                console.log('   - window.activeChatId:', window.activeChatId);
+                console.log('   - using chatId:', chatId);
+                console.log('   - sendFileMessageViaAPI exists:', typeof window.sendFileMessageViaAPI === 'function');
+
+                if (!pendingFile || !chatId) {
+                    console.error('❌ Cannot send file: pendingFile or chatId is missing');
+                    return;
+                }
 
                 // If integration.js with API is loaded, use it
-                if (typeof window.sendFileMessageViaAPI === 'function' && activeChat) {
+                if (typeof window.sendFileMessageViaAPI === 'function') {
+                    console.log('🌐 Using API to send file');
+                    // API is available, send via backend
                     window.sendFileMessageViaAPI(
                         pendingFile.data,
                         pendingFile.name,
@@ -1153,8 +1184,9 @@
                     return;
                 }
 
+                console.log('💾 Using local storage to send file');
                 // Otherwise, use local state (fallback for testing without backend)
-                mockChats[activeChatId].messages.push({
+                mockChats[chatId].messages.push({
                     senderId: currentUserId,
                     text: '',
                     timestamp: Date.now(),
@@ -1165,7 +1197,7 @@
                 });
 
                 saveState();
-                renderMessages(activeChatId);
+                renderMessages(chatId);
                 renderChatList();
 
                 showToast('File Sent', `${pendingFile.name} uploaded successfully`);
