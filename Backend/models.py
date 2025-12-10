@@ -25,3 +25,8 @@ class Message(db.Model):
     receiver_id = db.Column(db.Integer)
     content = db.Column(db.Text)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # File attachment fields
+    file_data = db.Column(db.Text, nullable=True)  # Base64 encoded file
+    file_name = db.Column(db.String(255), nullable=True)  # Original filename
+    file_type = db.Column(db.String(50), nullable=True)  # MIME type
+    file_category = db.Column(db.String(20), nullable=True)  # document/photo/video/audio

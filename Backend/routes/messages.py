@@ -13,7 +13,14 @@ def send_msg():
     try:
         data = request.json
         receiver_id = int(data["receiver_id"])
-        message_content = data["message"]
+        message_content = data.get("message", "")
+        
+        # File upload fields (optional)
+        file_data = data.get("file_data")
+        file_name = data.get("file_name")
+        file_type = data.get("file_type")
+        file_category = data.get("file_category")
+        
     except (TypeError, KeyError, ValueError):
         return jsonify({"error": "Invalid request body"}), 400
 
@@ -22,15 +29,30 @@ def send_msg():
     if not receiver:
         return jsonify({"error": "Receiver not found"}), 404
 
+    # Validate file size (5MB limit for base64)
+    if file_data:
+        # Base64 encoded size is ~4/3 of original
+        # 5MB * 1.33 = ~6.65MB base64
+        if len(file_data) > 6_650_000:
+            return jsonify({"error": "File too large. Maximum size is 5MB"}), 400
+
     msg = Message(
         sender_id=uid,
         receiver_id=receiver_id,
-        content=message_content
+        content=message_content,
+        file_data=file_data,
+        file_name=file_name,
+        file_type=file_type,
+        file_category=file_category
     )
     db.session.add(msg)
     db.session.commit()
 
-    return jsonify({"message": "sent"}), 200
+    return jsonify({
+        "message": "sent",
+        "id": msg.id,
+        "timestamp": msg.timestamp.isoformat()
+    }), 200
 
 @messages_bp.get("/chat/<int:friend_id>")
 @jwt_required()
@@ -52,7 +74,11 @@ def chat_history(friend_id):
             {
                 "from": m.sender_id, 
                 "text": m.content, 
-                "time": m.timestamp.isoformat() if m.timestamp else None
+                "time": m.timestamp.isoformat() if m.timestamp else None,
+                "file_data": m.file_data,
+                "file_name": m.file_name,
+                "file_type": m.file_type,
+                "file_category": m.file_category
             }
             for m in history
         ]

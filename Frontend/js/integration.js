@@ -240,10 +240,71 @@
                 const bubble = document.createElement('div');
                 bubble.className = `flex w-full ${isMe ? 'justify-end' : 'justify-start'}`;
 
+                // Handle file attachments
+                let fileContent = '';
+                if (msg.file_data && msg.file_name) {
+                    const formatFileSize = (bytes) => {
+                        if (bytes < 1024) return bytes + ' B';
+                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                    };
+
+                    const fileSize = msg.file_data.length * 0.75;
+
+                    if (msg.file_category === 'photo') {
+                        fileContent = `
+                            <div class="mb-2">
+                                <img src="${msg.file_data}" alt="${msg.file_name}" 
+                                    class="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                    onclick="window.open('${msg.file_data}', '_blank')">
+                            </div>
+                            <div class="text-xs text-gray-400">${msg.file_name}</div>
+                        `;
+                    } else if (msg.file_category === 'video') {
+                        fileContent = `
+                            <div class="mb-2">
+                                <video src="${msg.file_data}" controls class="max-w-xs rounded-lg">
+                                    Your browser does not support video playback.
+                                </video>
+                            </div>
+                            <div class="text-xs text-gray-400">${msg.file_name}</div>
+                        `;
+                    } else if (msg.file_category === 'audio') {
+                        fileContent = `
+                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                                <i data-lucide="music" class="w-6 h-6 text-orange-400"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium">${msg.file_name}</div>
+                                    <audio src="${msg.file_data}" controls class="w-full mt-2 max-w-xs">
+                                        Your browser does not support audio playback.
+                                    </audio>
+                                </div>
+                            </div>
+                        `;
+                    } else if (msg.file_data) {
+                        fileContent = `
+                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                                <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">${msg.file_name}</div>
+                                    <div class="text-xs text-gray-500">${formatFileSize(fileSize)}</div>
+                                </div>
+                                <a href="${msg.file_data}" download="${msg.file_name}" 
+                                    class="p-2 rounded-lg bg-brand-600 hover:bg-brand-500 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+
+                const textContent = msg.text || '';
+
                 bubble.innerHTML = `
                     <div class="max-w-[75%]">
                         <div class="p-3 rounded-2xl text-sm ${isMe ? 'bg-brand-600 text-white' : 'bg-white/5 text-gray-200'}">
-                            ${msg.text}
+                            ${fileContent}
+                            ${textContent ? `<div class="${fileContent ? 'mt-2' : ''}">${textContent}</div>` : ''}
                         </div>
                         <div class="text-[10px] text-gray-500 mt-1 ${isMe ? 'text-right' : 'text-left'}">
                             ${new Date(msg.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
@@ -253,6 +314,9 @@
 
                 container.appendChild(bubble);
             });
+
+            // Recreate Lucide icons for file type icons
+            lucide.createIcons();
 
             container.scrollTop = container.scrollHeight;
         } catch (error) {
@@ -285,6 +349,36 @@
                 await loadChatHistory(activeChat.id);
             } catch (error) {
                 console.error('Failed to send message:', error);
+            }
+        };
+
+        // File upload integration - override the sendFileMessage function
+        window.sendFileMessageViaAPI = async (fileData, fileName, fileType, fileCategory) => {
+            if (!activeChat) return;
+
+            try {
+                await apiRequest('/api/messages/send', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        receiver_id: activeChat.id,
+                        message: '',
+                        file_data: fileData,
+                        file_name: fileName,
+                        file_type: fileType,
+                        file_category: fileCategory
+                    })
+                });
+
+                await loadChatHistory(activeChat.id);
+
+                if (typeof showToast === 'function') {
+                    showToast('File Sent', `${fileName} uploaded successfully`);
+                }
+            } catch (error) {
+                console.error('Failed to send file:', error);
+                if (typeof showToast === 'function') {
+                    showToast('Error', 'Failed to send file');
+                }
             }
         };
     }

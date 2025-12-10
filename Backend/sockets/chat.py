@@ -22,7 +22,11 @@ def register_socket_events(socketio):
         msg = Message(
             sender_id=data["sender"],
             receiver_id=data["receiver"],
-            content=data["text"]
+            content=data.get("text", ""),
+            file_data=data.get("file_data"),
+            file_name=data.get("file_name"),
+            file_type=data.get("file_type"),
+            file_category=data.get("file_category")
         )
         db.session.add(msg)
         db.session.commit()
@@ -32,7 +36,13 @@ def register_socket_events(socketio):
         emit("new_message", {
             "from": data["sender"],
             "to": data["receiver"],
-            "text": data["text"],
-            "time": msg.timestamp.isoformat()
+            "text": data.get("text", ""),
+            "time": msg.timestamp.isoformat(),
+            "file_data": data.get("file_data"),
+            "file_name": data.get("file_name"),
+            "file_type": data.get("file_type"),
+            "file_category": data.get("file_category")
         }, room=room)
-        print(f"Message sent in room {room}: {data['text'][:30]}...")
+        
+        msg_preview = data.get('text', '')[:30] if data.get('text') else f"[File: {data.get('file_name', 'attachment')}]"
+        print(f"Message sent in room {room}: {msg_preview}...")

@@ -156,26 +156,64 @@
         }
 
         @media (max-width: 1024px) {
+
+            /* Show and position desktop sidebar for mobile menu */
+            aside {
+                display: flex !important;
+                position: fixed;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 200;
+            }
+
+            aside.mobile-menu-open {
+                transform: translateX(0);
+            }
+
+            /* Mobile backdrop */
+            .mobile-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 90;
+            }
+
+            .mobile-backdrop.active {
+                display: block;
+            }
+
             .layout-grid {
-                display: flex;
-                flex-direction: column;
+                display: flex !important;
+                flex-direction: column !important;
+                grid-template-columns: none !important;
+                width: 100vw;
+                height: 100vh;
             }
 
             .chat-list-col {
-                width: 100%;
-                height: 100%;
+                width: 100% !important;
+                height: 100vh;
+                flex-shrink: 0;
             }
 
             .chat-window-col {
-                position: fixed;
-                inset: 0;
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                width: 100% !important;
+                height: 100% !important;
+                max-width: 100vw !important;
                 z-index: 50;
                 transform: translateX(100%);
                 transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
 
             .chat-window-col.active {
-                transform: translateX(0);
+                transform: translateX(0) !important;
             }
         }
     </style>
@@ -186,6 +224,9 @@
     <!-- Background Ambience -->
     <div class="mesh-bg"></div>
     <div class="grid-overlay"></div>
+
+    <!-- Mobile Backdrop for Navigation -->
+    <div id="mobile-backdrop" class="mobile-backdrop"></div>
 
     <!-- 1. GLOBAL NAV SIDEBAR (Desktop Only - from Requests.html) -->
     <aside
@@ -287,7 +328,14 @@
 
             <!-- Header -->
             <div class="h-20 flex-shrink-0 px-6 flex items-center justify-between border-b border-white/5">
-                <h2 class="text-lg font-display font-bold text-white tracking-wide">Transmissions</h2>
+                <div class="flex items-center gap-3">
+                    <button id="mobile-menu-toggle-btn"
+                        class="lg:hidden w-9 h-9 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors flex-shrink-0"
+                        title="Menu">
+                        <i data-lucide="menu" class="w-5 h-5"></i>
+                    </button>
+                    <h2 class="text-lg font-display font-bold text-white tracking-wide">Transmissions</h2>
+                </div>
                 <div class="flex gap-2">
                     <button id="add-contact-btn"
                         class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
@@ -576,6 +624,59 @@
         </div>
     </div>
 
+    <!-- 5. File Upload Modal -->
+    <div id="file-upload-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Select File Type</h3>
+                <button data-action="close-file-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="window.selectFileType('document')"
+                    class="p-6 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-brand-500/50 transition-all group flex flex-col items-center gap-3">
+                    <i data-lucide="file-text"
+                        class="w-10 h-10 text-blue-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-white font-medium">Document</span>
+                    <span class="text-xs text-gray-500">PDF, DOC, TXT</span>
+                </button>
+
+                <button onclick="window.selectFileType('photo')"
+                    class="p-6 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-brand-500/50 transition-all group flex flex-col items-center gap-3">
+                    <i data-lucide="image"
+                        class="w-10 h-10 text-green-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-white font-medium">Photo</span>
+                    <span class="text-xs text-gray-500">JPG, PNG, GIF</span>
+                </button>
+
+                <button onclick="window.selectFileType('video')"
+                    class="p-6 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-brand-500/50 transition-all group flex flex-col items-center gap-3">
+                    <i data-lucide="video"
+                        class="w-10 h-10 text-purple-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-white font-medium">Video</span>
+                    <span class="text-xs text-gray-500">MP4, WEBM</span>
+                </button>
+
+                <button onclick="window.selectFileType('audio')"
+                    class="p-6 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-brand-500/50 transition-all group flex flex-col items-center gap-3">
+                    <i data-lucide="music"
+                        class="w-10 h-10 text-orange-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-white font-medium">Audio</span>
+                    <span class="text-xs text-gray-500">MP3, WAV, OGG</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="file-input-document" accept=".pdf,.doc,.docx,.txt,.rtf" class="hidden">
+    <input type="file" id="file-input-photo" accept="image/*" class="hidden">
+    <input type="file" id="file-input-video" accept="video/*" class="hidden">
+    <input type="file" id="file-input-audio" accept="audio/*" class="hidden">
+
     <!-- Toast Notification -->
     <div id="notification-toast"
         class="fixed bottom-6 right-6 z-50 p-4 rounded-xl shadow-2xl min-w-[320px] glass border-l-4 border-brand-500 flex items-center gap-4 transform translate-y-32 opacity-0 transition-all duration-500">
@@ -713,6 +814,70 @@
                 const bubble = document.createElement('div');
                 bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`;
 
+                // Handle file attachments
+                let fileContent = '';
+                if (msg.fileData && msg.fileName) {
+                    const formatFileSize = (bytes) => {
+                        if (bytes < 1024) return bytes + ' B';
+                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+                    };
+
+                    const fileSize = msg.fileData.length * 0.75; // Approximate size from base64
+
+                    if (msg.fileCategory === 'photo') {
+                        // Display image
+                        fileContent = `
+                            <div class="mb-2">
+                                <img src="${msg.fileData}" alt="${msg.fileName}" 
+                                    class="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                    onclick="window.open('${msg.fileData}', '_blank')">
+                            </div>
+                            <div class="text-xs text-gray-400">${msg.fileName}</div>
+                        `;
+                    } else if (msg.fileCategory === 'video') {
+                        // Display video player
+                        fileContent = `
+                            <div class="mb-2">
+                                <video src="${msg.fileData}" controls class="max-w-xs rounded-lg">
+                                    Your browser does not support video playback.
+                                </video>
+                            </div>
+                            <div class="text-xs text-gray-400">${msg.fileName}</div>
+                        `;
+                    } else if (msg.fileCategory === 'audio') {
+                        // Display audio player
+                        fileContent = `
+                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
+                                <i data-lucide="music" class="w-6 h-6 text-orange-400"></i>
+                                <div class="flex-1">
+                                    <div class="text-sm font-medium">${msg.fileName}</div>
+                                    <audio src="${msg.fileData}" controls class="w-full mt-2 max-w-xs">
+                                        Your browser does not support audio playback.
+                                    </audio>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        // Display document/file with download button
+                        fileContent = `
+                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
+                                <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">${msg.fileName}</div>
+                                    <div class="text-xs text-gray-500">${formatFileSize(fileSize)}</div>
+                                </div>
+                                <a href="${msg.fileData}" download="${msg.fileName}" 
+                                    class="p-2 rounded-lg bg-brand-600 hover:bg-brand-500 transition-colors">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                </a>
+                            </div>
+                        `;
+                    }
+                }
+
+                const textContent = msg.text ? msg.text : '';
+
                 bubble.innerHTML = `
                 <div class="max-w-[75%] group relative">
                     <!-- Actions -->
@@ -722,7 +887,8 @@
                     </div>
 
                     <div class="p-3 rounded-2xl text-sm leading-relaxed relative z-10 ${isMe ? 'bubble-sent text-white rounded-tr-sm' : 'bubble-received text-gray-200 rounded-tl-sm'}">
-                        ${msg.text}
+                        ${fileContent}
+                        ${textContent ? `<div class="mt-2">${textContent}</div>` : ''}
                     </div>
                     <div class="text-[10px] text-gray-500 mt-1 font-mono ${isMe ? 'text-right' : 'text-left'}">
                         ${formatTime(msg.timestamp)}
@@ -731,6 +897,9 @@
             `;
                 DOM.messagesContainer.appendChild(bubble);
             });
+
+            // Recreate Lucide icons for file type icons
+            lucide.createIcons();
 
             setTimeout(() => DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight, 10);
         }
@@ -830,15 +999,55 @@
             DOM.searchInput.addEventListener('input', renderChatList);
 
             // Mobile Nav
-            document.getElementById('mobile-menu-btn').onclick = () => {
-                // Logic to show sidebar is inherent in desktop view, 
-                // for mobile we just ensure the window isn't active
-                DOM.chatWindowCol.classList.remove('active');
-            };
-            document.getElementById('back-to-list-btn').onclick = () => {
-                DOM.chatWindowCol.classList.remove('active');
-                activeChatId = null;
-            };
+            const mobileBtnWelcome = document.getElementById('mobile-menu-btn');
+            const mobileBtnHeader = document.getElementById('mobile-menu-toggle-btn');
+            const backBtn = document.getElementById('back-to-list-btn');
+            const sidebar = document.querySelector('aside');
+            const mobileBackdrop = document.getElementById('mobile-backdrop');
+
+            if (mobileBtnWelcome) {
+                mobileBtnWelcome.onclick = () => {
+                    console.log('Welcome mobile menu clicked');
+                    if (sidebar && mobileBackdrop) {
+                        sidebar.classList.toggle('mobile-menu-open');
+                        mobileBackdrop.classList.toggle('active');
+                    }
+                };
+            }
+
+            if (mobileBtnHeader) {
+                mobileBtnHeader.onclick = () => {
+                    console.log('Header mobile menu clicked');
+                    if (sidebar && mobileBackdrop) {
+                        sidebar.classList.toggle('mobile-menu-open');
+                        mobileBackdrop.classList.toggle('active');
+                    }
+                };
+            } else {
+                console.error('Mobile menu toggle button not found!');
+            }
+
+            if (backBtn) {
+                backBtn.onclick = () => {
+                    console.log('Back button clicked');
+                    DOM.chatWindowCol.classList.remove('active');
+                    activeChatId = null;
+                };
+            }
+
+            // Click backdrop to close mobile nav
+            if (mobileBackdrop) {
+                mobileBackdrop.onclick = () => {
+                    sidebar.classList.remove('mobile-menu-open');
+                    mobileBackdrop.classList.remove('active');
+                };
+            }
+
+            // Recreate icons after a slight delay to ensure all DOM is ready
+            setTimeout(() => {
+                lucide.createIcons();
+                console.log('Icons recreated');
+            }, 100);
 
             // Modal Triggers
             document.getElementById('add-contact-btn').onclick = () => toggleModal(DOM.addContactModal, true);
@@ -867,6 +1076,101 @@
                     toggleModal(modal, false);
                 }
             });
+
+            // File Upload Button
+            const fileUploadModal = document.getElementById('file-upload-modal');
+            document.querySelector('button[data-action="attachment"]').onclick = () => {
+                toggleModal(fileUploadModal, true);
+            };
+
+            // File Type Selection and Upload Logic
+            let pendingFile = null;
+            let pendingFileCategory = null;
+
+            window.selectFileType = (category) => {
+                const inputId = `file-input-${category}`;
+                const fileInput = document.getElementById(inputId);
+
+                fileInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    // Validate file size (5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        showToast('Error', 'File too large. Maximum size is 5MB');
+                        e.target.value = '';
+                        return;
+                    }
+
+                    // Read file as base64
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        const base64Data = event.target.result;
+
+                        // Store file info
+                        pendingFile = {
+                            data: base64Data,
+                            name: file.name,
+                            type: file.type,
+                            category: category,
+                            size: file.size
+                        };
+
+                        // Close modal
+                        toggleModal(fileUploadModal, false);
+
+                        // Send file immediately
+                        sendFileMessage();
+
+                        // Clear input
+                        e.target.value = '';
+                    };
+
+                    reader.onerror = () => {
+                        showToast('Error', 'Failed to read file');
+                        e.target.value = '';
+                    };
+
+                    reader.readAsDataURL(file);
+                };
+
+                fileInput.click();
+            };
+
+            // Send file message
+            function sendFileMessage() {
+                if (!pendingFile || !activeChatId) return;
+
+                // If integration.js with API is loaded, use it
+                if (typeof window.sendFileMessageViaAPI === 'function' && activeChat) {
+                    window.sendFileMessageViaAPI(
+                        pendingFile.data,
+                        pendingFile.name,
+                        pendingFile.type,
+                        pendingFile.category
+                    );
+                    pendingFile = null;
+                    return;
+                }
+
+                // Otherwise, use local state (fallback for testing without backend)
+                mockChats[activeChatId].messages.push({
+                    senderId: currentUserId,
+                    text: '',
+                    timestamp: Date.now(),
+                    fileData: pendingFile.data,
+                    fileName: pendingFile.name,
+                    fileType: pendingFile.type,
+                    fileCategory: pendingFile.category
+                });
+
+                saveState();
+                renderMessages(activeChatId);
+                renderChatList();
+
+                showToast('File Sent', `${pendingFile.name} uploaded successfully`);
+                pendingFile = null;
+            }
 
             // Add Contact Logic
             document.getElementById('add-contact-form').onsubmit = (e) => {
