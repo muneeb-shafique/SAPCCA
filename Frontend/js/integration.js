@@ -804,6 +804,35 @@
         }
     }
 
+    async function updateFriendRequestBadge() {
+        try {
+            const response = await apiRequest('/api/friends/pending');
+            const count = response.requests ? response.requests.length : 0;
+            // Use querySelectorAll to handle potential multiple badges (e.g. mobile/desktop)
+            // Handle standard badges (hide if 0)
+            const badges = document.querySelectorAll('.friend-req-count');
+            badges.forEach(badge => {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('hidden');
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.classList.add('hidden');
+                    badge.style.display = 'none';
+                }
+            });
+
+            // Handle stat cards (show 0 if 0)
+            const stats = document.querySelectorAll('.friend-req-stat');
+            stats.forEach(stat => {
+                stat.textContent = count;
+            });
+
+        } catch (e) {
+            console.error('Failed to update friend badge', e);
+        }
+    }
+
     function setupProfileUpdate() {
         const saveBtn = document.getElementById('btn-save');
 
@@ -838,6 +867,9 @@
         await initSettingsPage();
         setupSendMessage();
         setupChatAddFriendButton();
+
+        // Initial badge update
+        await updateFriendRequestBadge();
 
         const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
         console.log(`SAPCCA Integration loaded for User ID: ${userData.id || 'Unknown'}`);
