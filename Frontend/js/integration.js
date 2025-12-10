@@ -214,6 +214,12 @@
         document.getElementById('active-chat-interface').classList.remove('hidden');
         document.getElementById('active-chat-interface').classList.add('flex');
 
+        // Mobile View Transition
+        const chatWindowCol = document.getElementById('chat-window-col');
+        if (chatWindowCol) {
+            chatWindowCol.classList.add('active');
+        }
+
         await loadChatHistory(friend.id);
     }
 
