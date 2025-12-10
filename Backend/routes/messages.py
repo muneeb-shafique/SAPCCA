@@ -3,6 +3,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Message, User
 from database import db
 
+
+
 messages_bp = Blueprint("messages", __name__)
 
 @messages_bp.post("/send")
@@ -72,6 +74,7 @@ def chat_history(friend_id):
     return jsonify({
         "messages": [
             {
+                "id": m.id,  # Include message ID
                 "from": m.sender_id, 
                 "text": m.content, 
                 "time": m.timestamp.isoformat() if m.timestamp else None,
@@ -83,3 +86,21 @@ def chat_history(friend_id):
             for m in history
         ]
     }), 200
+
+@messages_bp.delete("/delete/<int:message_id>")
+@jwt_required()
+def delete_message(message_id):
+    uid = int(get_jwt_identity())
+    
+    msg = Message.query.get(message_id)
+    
+    if not msg:
+        return jsonify({"error": "Message not found"}), 404
+        
+    if msg.sender_id != uid:
+        return jsonify({"error": "Unauthorized"}), 403
+        
+    db.session.delete(msg)
+    db.session.commit()
+    
+    return jsonify({"message": "Message deleted"}), 200

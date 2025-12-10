@@ -213,6 +213,7 @@
         document.getElementById('welcome-container').classList.add('hidden');
         document.getElementById('active-chat-interface').classList.remove('hidden');
         document.getElementById('active-chat-interface').classList.add('flex');
+
         await loadChatHistory(friend.id);
     }
 
@@ -278,9 +279,9 @@
                         fileContent = `
                             <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
                                 <i data-lucide="music" class="w-6 h-6 text-orange-400"></i>
-                                <div class="flex-1">
+                                <div class="flex-1 min-w-[300px]">
                                     <div class="text-sm font-medium">${msg.file_name}</div>
-                                    <audio src="${msg.file_data}" controls class="w-full mt-2 max-w-xs">
+                                    <audio src="${msg.file_data}" controls class="w-full mt-2">
                                         Your browser does not support audio playback.
                                     </audio>
                                 </div>
@@ -305,8 +306,18 @@
 
                 const textContent = msg.text || '';
 
+                // --- DELETE BUTTON (Sender Only) ---
+                const deleteBtnHtml = isMe ? `
+                    <button class="absolute -left-8 top-1 opacity-0 group-hover:opacity-100 p-1.5 text-red-500/50 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
+                            onclick="window.deleteMessage('${msg.id}')" title="Delete message">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                ` : '';
+                // ---------------------
+
                 bubble.innerHTML = `
-                    <div class="max-w-[75%]">
+                    <div class="max-w-[75%] relative group" id="msg-${msg.id}">
+                        ${deleteBtnHtml}
                         <div class="p-3 rounded-2xl text-sm ${isMe ? 'bg-brand-600 text-white' : 'bg-white/5 text-gray-200'}">
                             ${fileContent}
                             ${textContent ? `<div class="${fileContent ? 'mt-2' : ''}">${textContent}</div>` : ''}
@@ -396,6 +407,50 @@
                 }
             }
         };
+    }
+
+    // ===== MESSAGE ACTIONS =====
+    window.deleteMessage = async (messageId) => {
+        console.log('🗑️ Delete requested for message:', messageId);
+
+        // Use the new modern modal if available
+        if (typeof window.showDeleteConfirmation === 'function') {
+            window.showDeleteConfirmation(messageId);
+            return;
+        }
+
+        // Fallback to browser confirm
+        if (!confirm('Are you sure you want to delete this message?')) return;
+        window.performMessageDeletion(messageId);
+    };
+
+    // Shared deletion logic (called by modal or fallback)
+    window.performMessageDeletion = async (messageId) => {
+        try {
+            console.log('🗑️ Sending DELETE request...');
+            await apiRequest(`/api/messages/delete/${messageId}`, {
+                method: 'DELETE'
+            });
+            console.log('✅ Message deleted from server');
+
+            // Remove from UI immediately
+            const msgElement = document.getElementById(`msg-${messageId}`);
+            if (msgElement) {
+                msgElement.style.transition = 'all 0.3s ease';
+                msgElement.style.opacity = '0';
+                msgElement.style.transform = 'scale(0.9)';
+                setTimeout(() => msgElement.remove(), 300);
+            }
+
+            if (typeof showToast === 'function') {
+                showToast('Success', 'Message deleted');
+            }
+        } catch (error) {
+            console.error('❌ Failed to delete message:', error);
+            if (typeof showToast === 'function') {
+                showToast('Error', 'Failed to delete message');
+            }
+        }
     }
 
     // ===== FRIENDS PAGE INTEGRATION =====
