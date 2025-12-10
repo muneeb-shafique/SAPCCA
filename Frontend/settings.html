@@ -147,6 +147,42 @@
             opacity: 0;
             pointer-events: none;
         }
+
+        @media (max-width: 1024px) {
+
+            /* Show and position desktop sidebar for mobile menu */
+            aside {
+                display: flex !important;
+                position: fixed !important;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 200 !important;
+            }
+
+            aside.mobile-menu-open {
+                transform: translateX(0);
+            }
+
+            /* Mobile backdrop */
+            .mobile-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 90;
+            }
+
+            .mobile-backdrop.active {
+                display: block;
+            }
+
+            main {
+                width: 100vw;
+            }
+        }
     </style>
 </head>
 
@@ -154,7 +190,10 @@
 
     <!-- Background Ambience -->
     <div class="mesh-bg"></div>
+    <div class="mesh-bg"></div>
     <div class="grid-overlay"></div>
+    <!-- Mobile Backdrop for Navigation -->
+    <div id="mobile-backdrop" class="mobile-backdrop"></div>
 
     <!-- SIDEBAR (Consistent with Requests.html) -->
     <aside
@@ -229,7 +268,10 @@
             class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
             <div class="flex items-center gap-4">
                 <div class="lg:hidden">
-                    <button class="text-gray-400 hover:text-white"><i data-lucide="menu" class="w-6 h-6"></i></button>
+                    <div class="lg:hidden">
+                        <button id="mobile-menu-btn" class="text-gray-400 hover:text-white"><i data-lucide="menu"
+                                class="w-6 h-6"></i></button>
+                    </div>
                 </div>
                 <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2 text-white">
                     <i data-lucide="sliders" class="w-5 h-5 text-brand-400"></i>
@@ -732,6 +774,23 @@
         }
 
         window.onload = init;
+
+        // --- Mobile Menu Logic ---
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.querySelector('aside');
+        const backdrop = document.getElementById('mobile-backdrop');
+
+        if (mobileBtn && sidebar && backdrop) {
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.add('mobile-menu-open');
+                backdrop.classList.add('active');
+            });
+
+            backdrop.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-menu-open');
+                backdrop.classList.remove('active');
+            });
+        }
 
     </script>
     <script src="js/integration.js"></script>
