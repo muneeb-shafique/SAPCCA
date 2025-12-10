@@ -635,6 +635,16 @@
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-pass').value;
 
+            // Get Selected Role
+            const roleInput = document.querySelector('input[name="role"]:checked');
+            const role = roleInput ? roleInput.value : 'student';
+
+            // 1. Domain Restriction Check
+            if (!email.endsWith('@uet.edu.pk')) {
+                showToast('Access Denied', 'Registration is restricted to @uet.edu.pk domains only.', true);
+                return;
+            }
+
             const btn = e.target.querySelector('button[type="submit"]');
             btn.classList.add('opacity-75', 'pointer-events-none');
 
@@ -645,7 +655,8 @@
                     body: JSON.stringify({
                         name: `${firstName} ${lastName}`,
                         email: email,
-                        password: password
+                        password: password,
+                        role: role // Send the selected role
                     })
                 });
 
