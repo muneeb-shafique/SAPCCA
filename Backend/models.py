@@ -11,6 +11,13 @@ class User(db.Model):
     otp_code = db.Column(db.String(10), nullable=True)
     otp_expiry = db.Column(db.DateTime, nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
+    is_admin = db.Column(db.Boolean, default=False)
+
+class SystemLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    level = db.Column(db.String(20))  # INFO, WARNING, ERROR
+    message = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
 
 class FriendRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -30,6 +30,9 @@ def create_app():
     app.register_blueprint(friends_bp, url_prefix="/api/friends")
     app.register_blueprint(messages_bp, url_prefix="/api/messages")
     app.register_blueprint(profile_bp, url_prefix="/api/profile")
+    
+    from routes.admin import admin_bp
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
 
     # socket events
     from sockets.chat import register_socket_events
