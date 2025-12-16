@@ -94,10 +94,14 @@
             currentUser = profile;
 
             // Store in sessionStorage (tab-specific)
+            // Store in sessionStorage (tab-specific)
             sessionStorage.setItem('user', JSON.stringify({
                 id: profile.id,
                 name: profile.name,
-                email: profile.email
+                email: profile.email,
+                role: profile.role,
+                department: profile.department,
+                designation: profile.faculty_designation
             }));
 
             updateUserUI();

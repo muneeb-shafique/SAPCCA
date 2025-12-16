@@ -31,6 +31,9 @@ def register():
             "name": data["name"],
             "registration_number": data.get("registration_number"),  # Optional field
             "password": data["password"],  # Will be hashed on verification
+            "role": data.get("role", "student"),
+            "department": data.get("department"),
+            "faculty_designation": data.get("faculty_designation"),
             "otp_code": otp_code,
             "otp_expiry": otp_expiry
         }
@@ -87,6 +90,9 @@ def verify_otp():
             display_name=pending["name"],
             registration_number=pending.get("registration_number"),
             is_verified=True,
+            role=pending.get("role", "student"),
+            department=pending.get("department"),
+            faculty_designation=pending.get("faculty_designation"),
             otp_code=None,
             otp_expiry=None
         )
@@ -132,7 +138,10 @@ def login():
             "user": {
                 "id": user.id, 
                 "name": user.display_name,
-                "email": user.email
+                "email": user.email,
+                "role": user.role,
+                "department": user.department,
+                "designation": user.faculty_designation
             }
         }), 200
         

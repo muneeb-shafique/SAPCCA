@@ -19,7 +19,10 @@ def profile():
         "name": user.display_name,
         "email": user.email,
         "registration_number": user.registration_number,
-        "avatar": user.avatar_url
+        "avatar": user.avatar_url,
+        "role": user.role,
+        "department": user.department,
+        "faculty_designation": user.faculty_designation
     }), 200
 
 @profile_bp.post("/update")

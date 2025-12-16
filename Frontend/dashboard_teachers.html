@@ -672,6 +672,13 @@
                 if (sidebar) sidebar.classList.remove('auth-protected');
                 if (main) main.classList.remove('auth-protected');
             } else if (authStatus === 'unauthorized') {
+                const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
+                console.warn('Access Denied. Current Role:', userData.role);
+
+                // Update modal text to show why
+                const modalText = document.querySelector('#access-denied-modal p');
+                if (modalText) modalText.innerHTML += `<br><br><span class="text-xs text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded">Debug: Identity '${userData.role || 'Unknown'}' is not authorized.</span>`;
+
                 // Show Access Denied Modal
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');

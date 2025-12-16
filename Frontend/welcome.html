@@ -429,9 +429,10 @@
                             </div>
 
                             <!-- Role Selection -->
-                            <div class="grid grid-cols-2 gap-3 mb-2">
+                            <div class="grid grid-cols-2 gap-3 mb-4">
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="role" value="student" class="peer sr-only" checked>
+                                    <input type="radio" name="role" value="student" class="peer sr-only" checked
+                                        onchange="toggleFacultyFields('student')">
                                     <div
                                         class="p-4 rounded-xl border border-white/10 bg-white/5 text-center text-sm text-gray-400 peer-checked:border-brand-500 peer-checked:text-white peer-checked:bg-brand-500/10 peer-checked:shadow-[0_0_15px_rgba(14,165,233,0.1)] transition-all hover:bg-white/10">
                                         <i data-lucide="graduation-cap"
@@ -440,7 +441,8 @@
                                     </div>
                                 </label>
                                 <label class="cursor-pointer">
-                                    <input type="radio" name="role" value="faculty" class="peer sr-only">
+                                    <input type="radio" name="role" value="faculty" class="peer sr-only"
+                                        onchange="toggleFacultyFields('faculty')">
                                     <div
                                         class="p-4 rounded-xl border border-white/10 bg-white/5 text-center text-sm text-gray-400 peer-checked:border-brand-500 peer-checked:text-white peer-checked:bg-brand-500/10 peer-checked:shadow-[0_0_15px_rgba(14,165,233,0.1)] transition-all hover:bg-white/10">
                                         <i data-lucide="book-open"
@@ -448,6 +450,46 @@
                                         Faculty
                                     </div>
                                 </label>
+                            </div>
+
+                            <!-- Faculty Details (Hidden by default) -->
+                            <div id="faculty-details" class="hidden space-y-4 mb-4 animate-fade-in">
+                                <div class="relative group">
+                                    <select id="signup-dept"
+                                        class="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all hover:bg-white/10 cursor-pointer">
+                                        <option value="" disabled selected class="bg-[#111317] text-gray-500">Select
+                                            Department</option>
+                                        <option value="Electrical Engineering" class="bg-[#111317]">Electrical
+                                            Engineering</option>
+                                        <option value="Civil Engineering" class="bg-[#111317]">Civil Engineering
+                                        </option>
+                                        <option value="Computer Science" class="bg-[#111317]">Computer Science</option>
+                                        <option value="Data Science" class="bg-[#111317]">Data Science</option>
+                                        <option value="Computer Engineering" class="bg-[#111317]">Computer Engineering
+                                        </option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-white transition-colors pointer-events-none"></i>
+                                </div>
+                                <div class="relative group">
+                                    <select id="signup-designation"
+                                        class="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all hover:bg-white/10 cursor-pointer">
+                                        <option value="" disabled selected class="bg-[#111317] text-gray-500">Select
+                                            Role</option>
+                                        <option value="Dean" class="bg-[#111317]">Dean</option>
+                                        <option value="Head of Department" class="bg-[#111317]">Head of Department
+                                        </option>
+                                        <option value="Professor" class="bg-[#111317]">Professor</option>
+                                        <option value="Associate Professor" class="bg-[#111317]">Associate Professor
+                                        </option>
+                                        <option value="Assistant Professor" class="bg-[#111317]">Assistant Professor
+                                        </option>
+                                        <option value="Lecturer" class="bg-[#111317]">Lecturer</option>
+                                        <option value="Lab Engineer" class="bg-[#111317]">Lab Engineer</option>
+                                    </select>
+                                    <i data-lucide="chevron-down"
+                                        class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 group-hover:text-white transition-colors pointer-events-none"></i>
+                                </div>
                             </div>
 
                             <button type="submit"
@@ -612,7 +654,11 @@
                     showToast('Success', 'Login successful!');
 
                     setTimeout(() => {
-                        window.location.href = '/chat.html';
+                        if (data.user.role === 'faculty' || data.user.role === 'admin') {
+                            window.location.href = '/dashboard_teachers.html';
+                        } else {
+                            window.location.href = '/chat.html';
+                        }
                     }, 1000);
                 } else {
                     showToast('Error', data.error || 'Login failed', true);
@@ -634,10 +680,24 @@
             const lastName = document.getElementById('signup-lname').value;
             const email = document.getElementById('signup-email').value;
             const password = document.getElementById('signup-pass').value;
+            const regNumber = document.getElementById('signup-roll').value; // Added reg number extraction
 
             // Get Selected Role
             const roleInput = document.querySelector('input[name="role"]:checked');
             const role = roleInput ? roleInput.value : 'student';
+
+            let department = null;
+            let designation = null;
+
+            if (role === 'faculty') {
+                department = document.getElementById('signup-dept').value;
+                designation = document.getElementById('signup-designation').value;
+
+                if (!department || !designation) {
+                    showToast('Missing Details', 'Please select your Department and Designation.', true);
+                    return;
+                }
+            }
 
             // 1. Domain Restriction Check
             if (!email.endsWith('@uet.edu.pk')) {
@@ -656,7 +716,10 @@
                         name: `${firstName} ${lastName}`,
                         email: email,
                         password: password,
-                        role: role // Send the selected role
+                        registration_number: regNumber, // Added to payload
+                        role: role,
+                        department: department,
+                        faculty_designation: designation
                     })
                 });
 
@@ -715,7 +778,11 @@
                     showToast('Welcome', 'Redirecting to dashboard...');
 
                     setTimeout(() => {
-                        window.location.href = '/chat.html';
+                        if (data.user.role === 'faculty' || data.user.role === 'admin') {
+                            window.location.href = '/dashboard_teachers.html';
+                        } else {
+                            window.location.href = '/chat.html';
+                        }
                     }, 1500);
                 } else {
                     showToast('Error', data.error || 'OTP verification failed', true);
@@ -742,6 +809,16 @@
             });
         });
 
+        // Toggle Faculty Fields
+        function toggleFacultyFields(role) {
+            const container = document.getElementById('faculty-details');
+            if (role === 'faculty') {
+                container.classList.remove('hidden');
+                lucide.createIcons(); // Re-render icons for the new elements if needed
+            } else {
+                container.classList.add('hidden');
+            }
+        }
     </script>
     <script src="js/welcome-enhancements.js"></script>
 </body>

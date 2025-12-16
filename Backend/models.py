@@ -12,6 +12,9 @@ class User(db.Model):
     otp_expiry = db.Column(db.DateTime, nullable=True)
     is_verified = db.Column(db.Boolean, default=False)
     is_admin = db.Column(db.Boolean, default=False)
+    role = db.Column(db.String(20), default="student")
+    department = db.Column(db.String(100), nullable=True)
+    faculty_designation = db.Column(db.String(100), nullable=True)
 
 class SystemLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)

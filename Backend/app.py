@@ -20,6 +20,12 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Auto-create tables if they don't exist (Fix for deleted DB)
+    with app.app_context():
+        # Import models so SQLAlchemy knows what to create
+        from models import User, SystemLog, FriendRequest, Message
+        db.create_all()
+
     # register routes
     from routes.auth import auth_bp
     from routes.friends import friends_bp
