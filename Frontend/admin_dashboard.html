@@ -164,8 +164,12 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-4">
-                <button onclick="logout()"
+            <div class="flex items-center gap-2">
+                <button onclick="lockDashboard()" title="Lock System"
+                    class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
+                    <i data-lucide="lock" class="w-5 h-5"></i>
+                </button>
+                <button onclick="logout()" title="Logout"
                     class="p-2 rounded-lg hover:bg-white/5 text-gray-400 hover:text-white transition-colors">
                     <i data-lucide="power" class="w-5 h-5"></i>
                 </button>
@@ -303,6 +307,10 @@
             e.preventDefault();
             const input = document.getElementById('admin-pass');
             if (input.value === ACCESS_CODE) {
+                // Store Key
+                adminKey = ACCESS_CODE;
+                sessionStorage.setItem('adminKey', ACCESS_CODE);
+
                 // Success Animation
                 input.classList.add('border-green-500', 'text-green-500');
                 setTimeout(() => {
@@ -311,8 +319,10 @@
                     lockScreen.style.opacity = '0';
                     lockScreen.style.transform = 'scale(1.1)';
                     setTimeout(() => {
-                        lockScreen.remove();
+                        lockScreen.style.display = 'none'; // Don't remove, just hide so we can check it
                         document.getElementById('app-container').classList.remove('opacity-0');
+                        loadStats();
+                        loadTables();
                     }, 500);
                 }, 300);
             } else {
@@ -325,6 +335,14 @@
         }
 
         // --- APP LOGIC ---
+        let adminKey = sessionStorage.getItem('adminKey');
+
+        // Check local storage and hide lock screen immediately if key exists
+        if (adminKey) {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app-container').classList.remove('opacity-0');
+        }
+
         let currentTable = null;
         let currentData = [];
         let currentSchema = [];
@@ -351,7 +369,11 @@
                 const res = await fetch(`${API_BASE}/stats`, { headers: getHeaders() });
                 if (res.status === 403) {
                     sessionStorage.removeItem('adminKey');
-                    location.reload();
+                    alert("Authentication Failed: Invalid Code or Session Expired.");
+                    document.getElementById('lock-screen').style.display = 'flex';
+                    document.getElementById('lock-screen').style.opacity = '1';
+                    document.getElementById('lock-screen').style.transform = 'scale(1)';
+                    document.getElementById('app-container').classList.add('opacity-0');
                     return;
                 }
                 const data = await res.json();
@@ -398,7 +420,7 @@
             lucide.createIcons();
 
             try {
-                const res = await fetch(`${API_BASE}/table/${tableName}`, { headers });
+                const res = await fetch(`${API_BASE}/table/${tableName}`, { headers: getHeaders() });
                 if (!res.ok) {
                     const err = await res.json();
                     throw new Error(err.error || `HTTP ${res.status}`);
@@ -573,7 +595,7 @@
             try {
                 const res = await fetch(url, {
                     method: method,
-                    headers: headers,
+                    headers: getHeaders(),
                     body: JSON.stringify(data)
                 });
 
@@ -594,7 +616,7 @@
             try {
                 const res = await fetch(`${API_BASE}/table/${currentTable}/${id}`, {
                     method: 'DELETE',
-                    headers: headers
+                    headers: getHeaders()
                 });
                 if (res.ok) {
                     refreshData();
@@ -608,6 +630,12 @@
         function refreshData() {
             if (currentTable) loadTableData(currentTable);
             else loadLogs();
+        }
+
+        function lockDashboard() {
+            sessionStorage.removeItem('adminKey');
+            // Force reload to reset state and show lock screen
+            window.location.reload();
         }
 
         function logout() {

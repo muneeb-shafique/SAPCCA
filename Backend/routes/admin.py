@@ -11,8 +11,11 @@ from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 def admin_required(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
-        # 1. Check for Master Key (God Mode)
+        # Debugging
         master_key = request.headers.get('X-Admin-Key')
+        print(f"DEBUG: Received X-Admin-Key: {master_key}")
+        
+        # 1. Check for Master Key (God Mode)
         if master_key == "ecbopwgkmml":
             return fn(*args, **kwargs)
         
