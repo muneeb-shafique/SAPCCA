@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>SAPCCA · Classes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="js/api-config.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 400: "#38bdf8", 500: "#0ea5e9", 600: "#0284c7" },
+                        accent: { 400: "#a855f7", 500: "#8b5cf6" }
+                    },
+                    fontFamily: {
+                        sans: ["Inter", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"]
+                    },
+                    animation: {
+                        'pulse-glow': 'pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                    },
+                    keyframes: {
+                        pulseGlow: {
+                            '0%, 100%': { opacity: 1, boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' },
+                            '50%': { opacity: .8, boxShadow: '0 0 10px rgba(139, 92, 246, 0.1)' }
+                        }
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        body {
+            background-color: #050505;
+            color: #e6eef8;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .mesh-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 50%, rgba(139, 92, 246, 0.1), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.08), transparent 25%);
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        .glass {
+            background: rgba(17, 19, 23, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .glass-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px -10px rgba(139, 92, 246, 0.2);
+        }
+
+        .scanner-line {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 40%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+            transform: skewX(-20deg) translateX(-150%);
+        }
+
+        .glass-card:hover .scanner-line {
+            animation: scan 1.5s ease-in-out;
+        }
+
+        @keyframes scan {
+            0% {
+                transform: skewX(-20deg) translateX(-150%);
+            }
+
+            100% {
+                transform: skewX(-20deg) translateX(250%);
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a0a0c;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        @media (max-width: 1024px) {
+            aside {
+                display: flex !important;
+                position: fixed !important;
+                left: 0;
+                top: 0;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 200 !important;
+            }
+
+            aside.mobile-menu-open {
+                transform: translateX(0);
+            }
+
+            .mobile-backdrop {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 90;
+            }
+
+            .mobile-backdrop.active {
+                display: block;
+            }
+        }
+    </style>
+</head>
+
+<body class="flex min-h-screen">
+    <div class="mesh-bg"></div>
+    <div class="grid-overlay"></div>
+    <div id="mobile-backdrop" class="mobile-backdrop"></div>
+
+    <!-- SIDEBAR -->
+    <aside class="hidden lg:flex flex-col justify-between glass w-80 flex-shrink-0">
+        <div class="p-8">
+            <div class="flex items-center gap-3 mb-12">
+                <div
+                    class="w-12 h-12 rounded-xl bg-gradient-to-br from-brand-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <i data-lucide="shield-check" class="w-6 h-6 text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-display font-bold tracking-tight text-white">SAPCCA</h1>
+                    <p class="text-[10px] uppercase tracking-widest text-brand-400 font-mono">Secure Access</p>
+                </div>
+            </div>
+            <nav class="space-y-2">
+                <a href="dashboard_teachers.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="layout-grid" class="w-5 h-5 group-hover:text-brand-400"></i>
+                    <span class="font-medium">Dashboard</span>
+                </a>
+                <a href="chat.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="message-square" class="w-5 h-5 group-hover:text-brand-400"></i>
+                    <span class="font-medium">Encrypted Chats</span>
+                </a>
+                <a href="classes.html"
+                    class="flex items-center gap-4 p-3 rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 text-indigo-400 ring-1 ring-indigo-500/20">
+                    <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+                    <span class="font-medium">Classes</span>
+                </a>
+                <a href="friends.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400"></i>
+                    <span class="font-medium">Friends</span>
+                </a>
+                <a href="settings.html"
+                    class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="settings" class="w-5 h-5 group-hover:text-brand-400"></i>
+                    <span class="font-medium">Settings</span>
+                </a>
+            </nav>
+        </div>
+        <div class="p-8 border-t border-white/5">
+            <div class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/5">
+                <img id="global-user-avatar" src="https://robohash.org/default?set=set4&bgset=bg2"
+                    class="w-10 h-10 rounded-full ring-2 ring-indigo-500/50">
+                <div class="overflow-hidden flex-1">
+                    <p id="global-user-name" class="text-sm font-bold text-white truncate">Loading...</p>
+                    <p class="text-xs text-gray-500 font-mono user-id-display">ID: Loading...</p>
+                </div>
+                <a href="welcome.html"><button class="text-gray-500 hover:text-white transition-colors"><i
+                            data-lucide="log-out" class="w-4 h-4"></i></button></a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden relative z-10">
+        <header
+            class="h-20 border-b border-white/5 flex items-center justify-between px-8 bg-[#050505]/50 backdrop-blur-sm sticky top-0 z-30">
+            <div class="flex items-center gap-4">
+                <button id="mobile-menu-btn" class="lg:hidden text-gray-400 hover:text-white">
+                    <i data-lucide="menu" class="w-6 h-6"></i>
+                </button>
+                <h2 class="text-xl font-display font-semibold tracking-wide flex items-center gap-2">
+                    <span
+                        class="w-2 h-6 bg-gradient-to-b from-indigo-500 to-purple-600 rounded-full shadow-[0_0_15px_rgba(139,92,246,0.5)]"></span>
+                    <span id="page-title">My Classes</span>
+                </h2>
+            </div>
+            <div class="flex items-center gap-4">
+                <button id="create-class-btn"
+                    class="hidden px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-medium transition-all shadow-lg shadow-indigo-500/20 flex items-center gap-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span class="hidden sm:inline">Create Class</span>
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8">
+            <div id="classes-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                <!-- Classes will be rendered here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Create Class Modal -->
+    <div id="create-class-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300">
+        <div class="w-full h-full flex items-center justify-center p-4">
+            <div
+                class="glass-card w-full max-w-md p-6 rounded-2xl border border-indigo-500/20 bg-[#111317] transform scale-95 transition-transform duration-300">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-display font-bold text-white">Create Class</h3>
+                        <p class="text-xs text-indigo-400 font-mono mt-1">FACULTY ONLY // COMMUNITY CHANNEL</p>
+                    </div>
+                    <button id="close-modal-btn" class="text-gray-500 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <form id="create-class-form">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-mono text-gray-500 mb-2">CLASS NAME</label>
+                            <input type="text" id="class-name-input" required
+                                class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                                placeholder="e.g. Computer Science - Fall 2025">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                            <textarea id="class-desc-input" rows="3"
+                                class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                                placeholder="Class description and details..."></textarea>
+                        </div>
+                        <div class="flex gap-3">
+                            <button type="button" id="cancel-btn"
+                                class="flex-1 py-3 rounded-lg border border-white/10 text-gray-400 hover:bg-white/10 hover:text-white transition-all">Cancel</button>
+                            <button type="submit"
+                                class="flex-1 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                                <i data-lucide="graduation-cap" class="w-4 h-4 inline mr-2"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="notification-toast"
+        class="fixed bottom-8 right-8 z-50 transform translate-y-32 opacity-0 transition-all duration-300">
+        <div class="glass p-4 rounded-xl border-l-4 border-indigo-500 shadow-2xl flex items-center gap-4 min-w-[300px]">
+            <div class="bg-indigo-500/20 p-2 rounded-full">
+                <i data-lucide="check-circle" class="w-5 h-5 text-indigo-400"></i>
+            </div>
+            <div>
+                <h4 class="text-white font-bold text-sm">Success</h4>
+                <p class="text-gray-400 text-xs">Operation completed</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        // State
+        let currentUserRole = '';
+        let classes = [];
+        let currentUser = null;
+
+        // Load user and classes
+        async function init() {
+            const user = JSON.parse(sessionStorage.getItem('user'));
+            if (!user) {
+                window.location.href = '/welcome.html';
+                return;
+            }
+
+            currentUser = user;
+            currentUserRole = user.role || 'student';
+            document.getElementById('global-user-name').textContent = user.name;
+            document.querySelector('.user-id-display').textContent = `ID: ${user.id}`;
+            document.getElementById('global-user-avatar').src = `https://robohash.org/${user.id}?set=set4&bgset=bg2`;
+
+            // Show create button for faculty
+            const isFaculty = ['faculty', 'teacher', 'professor', 'admin'].includes(currentUserRole.toLowerCase());
+            if (isFaculty) {
+                document.getElementById('create-class-btn').classList.remove('hidden');
+                document.getElementById('create-class-btn').classList.add('flex');
+                document.getElementById('page-title').textContent = 'Manage Classes';
+            } else {
+                document.getElementById('page-title').textContent = 'My Classes';
+            }
+
+            await loadClasses();
+        }
+
+        async function loadClasses() {
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/classes/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                const data = await res.json();
+
+                if (res.ok && data.classes) {
+                    classes = data.classes;
+                    console.log('Loaded classes:', classes);
+                } else {
+                    classes = [];
+                }
+
+                renderClasses();
+            } catch (e) {
+                console.error('Load classes error:', e);
+                renderClasses();
+            }
+        }
+
+        function renderClasses() {
+            const container = document.getElementById('classes-container');
+            const isFaculty = ['faculty', 'teacher', 'professor', 'admin'].includes(currentUserRole.toLowerCase());
+
+            if (classes.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-600/20 flex items-center justify-center mb-6 border border-indigo-500/30">
+                            <i data-lucide="graduation-cap" class="w-12 h-12 text-indigo-400"></i>
+                        </div>
+                        <h3 class="text-2xl font-display font-bold text-white mb-3">${isFaculty ? 'No Classes Created Yet' : 'Not Enrolled in Any Classes'}</h3>
+                        <p class="text-gray-400 max-w-md">${isFaculty ? 'Create your first class to start organizing subject groups and managing students' : 'You haven\'t been enrolled in any classes yet. Check with your instructors.'}</p>
+                        ${isFaculty ? '<button onclick="openCreateModal()" class="mt-6 px-6 py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold transition-all shadow-lg"><i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>Create First Class</button>' : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            container.innerHTML = '';
+            classes.forEach(cls => {
+                const card = document.createElement('div');
+                card.className = 'glass-card p-6 rounded-xl cursor-pointer hover:border-indigo-500/40 transition-all group';
+                card.innerHTML = `
+                    <div class="scanner-line"></div>
+                    <div class="flex items-start justify-between mb-4">
+                        <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-500/30 group-hover:shadow-indigo-500/50 transition-all">
+                            <i data-lucide="graduation-cap" class="w-7 h-7 text-white"></i>
+                        </div>
+                        ${cls.is_moderator ? '<span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded-full border border-indigo-500/30 font-mono font-bold">MODERATOR</span>' : ''}
+                    </div>
+                    <h3 class="text-lg font-display font-bold text-white mb-2 group-hover:text-indigo-300 transition-colors">${cls.name}</h3>
+                    <p class="text-sm text-gray-400 mb-4 line-clamp-2">${cls.description || 'No description provided'}</p>
+                    <div class="flex items-center justify-between pt-4 border-t border-white/5">
+                        <span class="flex items-center gap-1.5 text-xs text-gray-500"><i data-lucide="folder" class="w-3.5 h-3.5"></i> <span class="font-medium">${cls.group_count}</span> subject${cls.group_count !== 1 ? 's' : ''}</span>
+                        <span class="flex items-center gap-1.5 text-xs text-gray-500"><i data-lucide="users" class="w-3.5 h-3.5"></i> <span class="font-medium">${cls.member_count}</span> member${cls.member_count !== 1 ? 's' : ''}</span>
+                    </div>
+                `;
+                card.onclick = () => {
+                    window.location.href = `chat.html`;
+                    // Store class ID to open on chat page
+                    sessionStorage.setItem('openClassId', cls.id);
+                };
+                container.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        // Create class
+        document.getElementById('create-class-form').onsubmit = async (e) => {
+            e.preventDefault();
+            console.log('[CREATE CLASS] Form submitted');
+
+            const name = document.getElementById('class-name-input').value.trim();
+            const description = document.getElementById('class-desc-input').value.trim();
+            console.log('[CREATE CLASS] Name:', name, 'Description:', description);
+
+            if (!name) {
+                console.error('[CREATE CLASS] Validation failed: name is required');
+                showToast('Error', 'Class name is required', true);
+                return;
+            }
+
+            try {
+                const token = sessionStorage.getItem('token');
+                console.log('[CREATE CLASS] Token exists:', !!token);
+
+                if (!token) {
+                    console.error('[CREATE CLASS] No token found');
+                    showToast('Error', 'Please login again', true);
+                    return;
+                }
+
+                console.log('[CREATE CLASS] Sending request to /api/classes/create');
+                const res = await fetch('/api/classes/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, description })
+                });
+
+                console.log('[CREATE CLASS] Response status:', res.status);
+
+                if (res.ok) {
+                    const data = await res.json();
+                    console.log('[CREATE CLASS] Success! Response:', data);
+                    closeModal();
+                    document.getElementById('create-class-form').reset();
+                    showToast('Success', 'Class "' + name + '" created successfully!');
+                    await loadClasses();
+                } else {
+                    const err = await res.json();
+                    console.error('[CREATE CLASS] API error:', err);
+                    showToast('Error', err.error || 'Failed to create class', true);
+                }
+            } catch (e) {
+                console.error('[CREATE CLASS] Exception:', e);
+                showToast('Error', 'Network error: ' + e.message, true);
+            }
+        };
+
+        function openCreateModal() {
+            const modal = document.getElementById('create-class-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('.glass-card').classList.remove('scale-95');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('create-class-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('.glass-card').classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function showToast(title, msg, isError = false) {
+            const toast = document.getElementById('notification-toast');
+            toast.querySelector('h4').textContent = title;
+            toast.querySelector('p').textContent = msg;
+
+            if (isError) {
+                toast.querySelector('.border-indigo-500').className = 'glass p-4 rounded-xl border-l-4 border-red-500 shadow-2xl flex items-center gap-4 min-w-[300px]';
+                toast.querySelector('.bg-indigo-500\\\\/20').className = 'bg-red-500/20 p-2 rounded-full';
+                toast.querySelector('.text-indigo-400').className = 'w-5 h-5 text-red-400';
+            } else {
+                toast.querySelector('.glass').className = 'glass p-4 rounded-xl border-l-4 border-indigo-500 shadow-2xl flex items-center gap-4 min-w-[300px]';
+                toast.querySelector('div > div').className = 'bg-indigo-500/20 p-2 rounded-full';
+                toast.querySelector('i').className = 'w-5 h-5 text-indigo-400';
+            }
+
+            toast.classList.remove('translate-y-32', 'opacity-0');
+            setTimeout(() => toast.classList.add('translate-y-32', 'opacity-0'), 3000);
+            lucide.createIcons();
+        }
+
+        document.getElementById('create-class-btn').onclick = openCreateModal;
+        document.getElementById('close-modal-btn').onclick = closeModal;
+        document.getElementById('cancel-btn').onclick = closeModal;
+
+        // Mobile menu
+        const mobileBtn = document.getElementById('mobile-menu-btn');
+        const sidebar = document.querySelector('aside');
+        const backdrop = document.getElementById('mobile-backdrop');
+
+        if (mobileBtn && sidebar && backdrop) {
+            mobileBtn.addEventListener('click', () => {
+                sidebar.classList.add('mobile-menu-open');
+                backdrop.classList.add('active');
+            });
+            backdrop.addEventListener('click', () => {
+                sidebar.classList.remove('mobile-menu-open');
+                backdrop.classList.remove('active');
+            });
+        }
+
+        init();
+    </script>
+    <script src="js/integration.js"></script>
+</body>
+
+</html>
