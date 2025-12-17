@@ -261,6 +261,15 @@
                     <span class="font-medium">Encrypted Chats</span>
                 </a>
 
+                <!-- Classes (Faculty Only) -->
+                <a href="#" id="classes-nav-item"
+                    class="hidden flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Classes</span>
+                    <span id="classes-count"
+                        class="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.4)] hidden">0</span>
+                </a>
+
                 <a href="friends.html"
                     class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
                     <i data-lucide="users" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
@@ -332,6 +341,12 @@
                     <h2 class="text-lg font-display font-bold text-white tracking-wide">Transmissions</h2>
                 </div>
                 <div class="flex gap-2">
+                    <button id="create-group-btn"
+                        class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
+                        title="Create Group">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span class="sr-only">Create Group</span>
+                    </button>
                     <button id="add-contact-btn"
                         class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
                         title="Add Contact">
@@ -684,12 +699,303 @@
         </div>
     </div>
 
+    <!-- 6. Create Group Modal -->
+    <div id="create-group-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Create Secure Channel</h3>
+                <button data-action="close-create-group-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-group-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CHANNEL NAME</label>
+                        <input type="text" id="group-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Project Alpha">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="group-desc-input" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Operational details..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        Initialize Channel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- Core Logic -->
+    <!-- 7. Members List Modal -->
+    <div id="members-list-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Channel Operatives</h3>
+                <button data-action="close-members-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div id="members-list-container" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                <!-- Members injected here -->
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5">
+                <button id="trigger-add-member"
+                    class="w-full py-2 rounded-lg border border-dashed border-white/20 text-gray-400 hover:text-white hover:border-brand-500 hover:bg-brand-500/5 transition-all text-sm">
+                    + Add Operative
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Add Member Modal -->
+    <div id="add-member-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-display font-bold text-white">Add Personnel</h3>
+                <button data-action="close-add-member-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-member-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">USER EMAIL</label>
+                        <input type="email" id="member-email-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="agent@sapcca.com">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg">
+                        Grant Access
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 9. Edit Group Modal -->
+    <div id="edit-group-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Configure Channel</h3>
+                <button data-action="close-edit-group-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="edit-group-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CHANNEL NAME</label>
+                        <input type="text" id="edit-group-name" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="edit-group-desc" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">LOGO URL (Optional)</label>
+                        <input type="text" id="edit-group-image"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. Create Class Modal (Faculty Only) -->
+    <div id="create-class-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-indigo-500/20 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-display font-bold text-white">Create Class</h3>
+                    <p class="text-xs text-indigo-400 font-mono mt-1">FACULTY ONLY // COMMUNITY CHANNEL</p>
+                </div>
+                <button data-action="close-create-class-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-class-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CLASS NAME</label>
+                        <input type="text" id="class-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Computer Science - Fall 2025">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="class-desc-input" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Class description and details..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">ICON URL (Optional)</label>
+                        <input type="text" id="class-icon-input"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="https://example.com/icon.png">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 inline mr-2"></i>
+                        Create Class
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 11. Class Detail Modal -->
+    <div id="class-detail-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-2xl p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-indigo-500/20 bg-[#111317] max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h3 id="class-detail-name" class="text-2xl font-display font-bold text-white">Class Name</h3>
+                        <p id="class-detail-desc" class="text-sm text-gray-400">Description</p>
+                    </div>
+                </div>
+                <button data-action="close-class-detail-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Subject Groups Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="folder" class="w-5 h-5 text-indigo-400"></i>
+                        Subject Groups
+                    </h4>
+                    <button id="create-subject-group-btn"
+                        class="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-lg text-sm font-medium transition-colors border border-indigo-500/30">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                        Add Subject
+                    </button>
+                </div>
+                <div id="class-groups-list" class="space-y-2">
+                    <!-- Groups will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-brand-400"></i>
+                        Members <span id="class-members-count" class="text-sm text-gray-500">(0)</span>
+                    </h4>
+                    <button id="add-class-members-btn"
+                        class="px-3 py-1.5 bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 rounded-lg text-sm font-medium transition-colors border border-brand-500/30">
+                        <i data-lucide="user-plus" class="w-4 h-4 inline mr-1"></i>
+                        Add Members
+                    </button>
+                </div>
+                <div id="class-members-list" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    <!-- Members will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12. Add Class Members Modal -->
+    <div id="add-class-members-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-display font-bold text-white">Add Class Members</h3>
+                <button data-action="close-add-class-members-modal" class="text-gray-500 hover:text-white"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-class-members-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">EMAIL ADDRESSES (One per line)</label>
+                        <textarea id="class-members-emails-input" rows="5" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700 font-mono text-sm"
+                            placeholder="student1@example.com
+student2@example.com
+faculty@example.com"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="make-moderator-checkbox"
+                            class="rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500">
+                        Make moderators (can create groups)
+                    </label>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg">
+                        <i data-lucide="user-check" class="w-4 h-4 inline mr-2"></i>
+                        Add Members
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 13. Create Group in Class Modal -->
+    <div id="create-group-in-class-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Create Subject Group</h3>
+                <button data-action="close-create-group-in-class-modal" class="text-gray-500 hover:text-white"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-group-in-class-form">
+                <div class="space-y-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/30">
+                        <p class="text-xs text-indigo-400 font-mono">PARENT CLASS</p>
+                        <p id="parent-class-name" class="text-white font-semibold mt-1">Class Name</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">SUBJECT NAME</label>
+                        <input type="text" id="subject-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Database Management Systems">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="subject-desc-input" rows="2"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Subject details..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        <i data-lucide="folder-plus" class="w-4 h-4 inline mr-2"></i>
+                        Create Subject Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // --- STATE & DATA ---
         const STORAGE_KEYS = { CHATS: 'nexus_chats_data_v2', USER: 'nexus_user_data_v2' };
-        // --- DOM ELEMENTS MAPPING (MISSING IN YOUR CODE) ---
+
+        // --- DOM MAPPING ---
         const DOM = {
             globalAvatar: document.getElementById('global-user-avatar'),
             globalStatusDot: document.getElementById('global-status-dot'),
@@ -709,45 +1015,158 @@
             sendIcon: document.getElementById('send-icon'),
             addContactModal: document.getElementById('add-contact-modal'),
             userProfileModal: document.getElementById('user-profile-modal'),
-            channelInfoModal: document.getElementById('channel-info-modal'),
-            statusDropdown: document.getElementById('status-dropdown')
+            channelInfoModal: document.getElementById('channel-info-modal'), // DM Info
+            statusDropdown: document.getElementById('status-dropdown'),
+            // Groups
+            createGroupModal: document.getElementById('create-group-modal'),
+            membersListModal: document.getElementById('members-list-modal'),
+            addMemberModal: document.getElementById('add-member-modal'),
+            editGroupModal: document.getElementById('edit-group-modal'),
+            membersListContainer: document.getElementById('members-list-container'),
+            // Classes (New)
+            classesNavItem: document.getElementById('classes-nav-item'),
+            createClassModal: document.getElementById('create-class-modal'),
+            classDetailModal: document.getElementById('class-detail-modal'),
+            addClassMembersModal: document.getElementById('add-class-members-modal'),
+            createGroupInClassModal: document.getElementById('create-group-in-class-modal')
         };
         const DEFAULT_AVATAR = "https://robohash.org/default?set=set4&bgset=bg2";
 
+        // Current User
         let currentUserId = 'SEC-' + crypto.randomUUID().substring(0, 4).toUpperCase();
         let currentUserName = "Loading...";
-        let currentUserStatus = 'Loading...';
-        let currentUserRole = 'Loading...';
+        let currentUserStatus = 'Active';
+        let currentUserRole = 'Unknown';
 
-        // Make activeChatId accessible globally for integration.js
-        window.activeChatId = null;
+        // Active Chat State
         let activeChatId = null;
+        let activeChatType = null; // 'dm' or 'group'
+        window.activeChatId = null; // Global sync
 
-        let mockChats = {}; // Empty chat list for new accounts - integration.js will load real friends
-
+        // Data Stores
+        let mockChats = {}; // Local DMs
+        let groups = [];    // API Groups
+        let classes = [];   // API Classes
+        let activeClassId = null; // Currently viewing class
 
         // --- UTILS ---
         const getAvatar = (id) => `https://robohash.org/${id}?set=set4&bgset=bg2`;
         const formatTime = (ts) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const isFaculty = () => {
+            const roles = ['faculty', 'teacher', 'professor', 'admin'];
+            return roles.includes(currentUserRole?.toLowerCase());
+        };
+        // DM Contact Helper
         const getContact = (id) => {
-            if (id === currentUserId) return { name: currentUserName, status: currentUserStatus, role: currentUserRole };
+            if (id === currentUserId) return { name: currentUserName, status: currentUserStatus };
             return DEFAULT_MOCK_USERS[id] || { name: id, status: 'Offline', role: 'Unknown' };
         };
 
         // --- STATE MANAGEMENT ---
-        function loadState() {
+        async function loadState() {
             try {
-                const u = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER));
-                if (u) { currentUserId = u.id; currentUserName = u.name; currentUserStatus = u.status; }
-
-                const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHATS));
-                if (c) {
-                    mockChats = c;
+                // 1. Load User from Session (Real Auth)
+                const sessionUser = JSON.parse(sessionStorage.getItem('user'));
+                if (sessionUser) {
+                    currentUserId = sessionUser.id; // Usually integer for backend, but we handle string/int
+                    currentUserName = sessionUser.name;
+                    currentUserRole = sessionUser.role;
                 } else {
-                    // Init defaults
-                    mockChats = {}; // Empty chat list for new accounts - integration.js will load real friends
+                    // Fallback to local
+                    const u = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER));
+                    if (u) { currentUserId = u.id; currentUserName = u.name; currentUserStatus = u.status; }
                 }
+
+                // 2. Load Local DMs
+                const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHATS));
+                if (c) mockChats = c;
+                else mockChats = {};
+
+                // 3. Load Groups from API
+                await loadGroups();
+
+                // 4. Load Classes from API (if faculty)
+                if (isFaculty()) {
+                    await loadClasses();
+                    // Show classes nav item for faculty
+                    if (DOM.classesNavItem) {
+                        DOM.classesNavItem.classList.remove('hidden');
+                        DOM.classesNavItem.classList.add('flex');
+                    }
+                }
+
             } catch (e) { console.error("Load Error", e); }
+        }
+
+        async function loadGroups() {
+            try {
+                const token = sessionStorage.getItem('token');
+                console.log('[GROUPS] Loading groups, token exists:', !!token);
+
+                if (!token) {
+                    console.warn('[GROUPS] No token found, skipping group load');
+                    return;
+                }
+
+                const res = await fetch('/api/groups/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                console.log('[GROUPS] API Response status:', res.status);
+
+                if (!res.ok) {
+                    console.error('[GROUPS] API error:', res.status, res.statusText);
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('[GROUPS] API Response data:', data);
+
+                if (data.groups) {
+                    groups = data.groups;
+                    console.log('[GROUPS] Loaded', groups.length, 'groups');
+                } else {
+                    console.warn('[GROUPS] No groups array in response');
+                }
+            } catch (e) {
+                console.error("[GROUPS] Load Error:", e);
+            }
+        }
+
+        async function loadClasses() {
+            try {
+                const token = sessionStorage.getItem('token');
+                console.log('[CLASSES] Loading classes, token exists:', !!token);
+
+                if (!token) {
+                    console.warn('[CLASSES] No token found, skipping class load');
+                    return;
+                }
+
+                const res = await fetch('/api/classes/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                console.log('[CLASSES] API Response status:', res.status);
+
+                if (!res.ok) {
+                    console.error('[CLASSES] API error:', res.status, res.statusText);
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('[CLASSES] API Response data:', data);
+
+                if (data.classes) {
+                    classes = data.classes;
+                    console.log('[CLASSES] Loaded', classes.length, 'classes');
+
+                    // Update badge
+                    const badge = document.getElementById('classes-count');
+                    if (badge && classes.length > 0) {
+                        badge.textContent = classes.length;
+                        badge.classList.remove('hidden');
+                    }
+                } else {
+                    console.warn('[CLASSES] No classes array in response');
+                }
+            } catch (e) {
+                console.error("[CLASSES] Load Error:", e);
+            }
         }
 
         function saveState() {
@@ -768,20 +1187,97 @@
             DOM.chatListContainer.innerHTML = '';
             const filter = DOM.searchInput.value.toLowerCase();
 
+            // --- SECTION 1: GROUPS ---
+            const groupsHeader = document.createElement('div');
+            groupsHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-2";
+            groupsHeader.innerHTML = `<span>Group Channels</span>  <button id="trigger-create-group" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+            DOM.chatListContainer.appendChild(groupsHeader);
+            // Re-attach listener immediately
+            groupsHeader.querySelector('#trigger-create-group').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createGroupModal, true); };
+
+            if (groups.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = "px-3 py-2 text-xs text-gray-600 italic";
+                empty.textContent = "No active channels";
+                DOM.chatListContainer.appendChild(empty);
+            } else {
+                groups.forEach(g => {
+                    if (filter && !g.name.toLowerCase().includes(filter)) return;
+
+                    const isActive = (activeChatId == g.id && activeChatType === 'group');
+                    const el = document.createElement('div');
+                    el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
+                    el.onclick = () => openChat(g.id, 'group');
+
+                    const seed = g.name.replace(/[^a-zA-Z0-9]/g, '');
+
+                    el.innerHTML = `
+                        <div class="relative flex-shrink-0">
+                           <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30 ring-2 ring-transparent ${isActive ? 'ring-indigo-500/50' : ''}">
+                                ${g.name.substring(0, 2).toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h4 class="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">${g.name}</h4>
+                            </div>
+                            <p class="text-xs text-gray-400 truncate">${g.description || 'Secure Channel'}</p>
+                        </div>
+                    `;
+                    DOM.chatListContainer.appendChild(el);
+                });
+            }
+            lucide.createIcons();
+
+            // --- SECTION 2: CLASSES (Faculty Only) ---
+            if (isFaculty() && classes.length > 0) {
+                const classesHeader = document.createElement('div');
+                classesHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
+                classesHeader.innerHTML = `<span>Classes</span> <button id="trigger-create-class" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+                DOM.chatListContainer.appendChild(classesHeader);
+                classesHeader.querySelector('#trigger-create-class').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createClassModal, true); };
+
+                classes.forEach(cls => {
+                    if (filter && !cls.name.toLowerCase().includes(filter)) return;
+
+                    const classEl = document.createElement('div');
+                    classEl.className = 'p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:bg-indigo-500/10 hover:border-indigo-500/30 flex items-center gap-3';
+                    classEl.innerHTML = `
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-white truncate">${cls.name}</h4>
+                            <p class="text-xs text-gray-400">${cls.group_count} subject${cls.group_count !== 1 ? 's' : ''}</p>
+                        </div>
+                        ${cls.is_moderator ? '<span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">MOD</span>' : ''}
+                    `;
+                    classEl.onclick = () => viewClassDetails(cls.id);
+                    DOM.chatListContainer.appendChild(classEl);
+                });
+                lucide.createIcons();
+            }
+
+            // --- SECTION 3: DIRECT MESSAGES ---
+            const dmHeader = document.createElement('div');
+            dmHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
+            dmHeader.innerHTML = `<span>Direct Messages</span>`;
+            DOM.chatListContainer.appendChild(dmHeader);
+
             Object.keys(mockChats).forEach(chatId => {
                 const chat = mockChats[chatId];
                 const contact = getContact(chat.contactId);
-
                 if (filter && !contact.name.toLowerCase().includes(filter)) return;
 
                 const lastMsg = chat.messages[chat.messages.length - 1];
                 const msgPreview = lastMsg ? (lastMsg.senderId === currentUserId ? 'You: ' : '') + lastMsg.text : 'No Data';
-                const isActive = chatId === activeChatId;
+                const isActive = (activeChatId == chatId && activeChatType === 'dm');
+
                 const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
 
                 const el = document.createElement('div');
                 el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
-                el.onclick = () => openChat(chatId);
+                el.onclick = () => openChat(chatId, 'dm');
 
                 el.innerHTML = `
                 <div class="relative flex-shrink-0">
@@ -799,162 +1295,460 @@
             `;
                 DOM.chatListContainer.appendChild(el);
             });
-        }
 
-        function renderMessages(chatId) {
-            DOM.messagesContainer.innerHTML = '';
-            const chat = mockChats[chatId];
-            if (!chat) return;
-
-            // Date divider logic could go here
-
-            chat.messages.forEach(msg => {
-                const isMe = msg.senderId === currentUserId;
-                const bubble = document.createElement('div');
-                bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in`;
-
-                // Handle file attachments
-                let fileContent = '';
-                if (msg.fileData && msg.fileName) {
-                    const formatFileSize = (bytes) => {
-                        if (bytes < 1024) return bytes + ' B';
-                        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-                        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-                    };
-
-                    const fileSize = msg.fileData.length * 0.75; // Approximate size from base64
-
-                    if (msg.fileCategory === 'photo') {
-                        // Display image
-                        fileContent = `
-                            <div class="mb-2">
-                                <img src="${msg.fileData}" alt="${msg.fileName}" 
-                                    class="max-w-xs rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
-                                    onclick="window.open('${msg.fileData}', '_blank')">
-                            </div>
-                            <div class="text-xs text-gray-400">${msg.fileName}</div>
-                        `;
-                    } else if (msg.fileCategory === 'video') {
-                        // Display video player
-                        fileContent = `
-                            <div class="mb-2">
-                                <video src="${msg.fileData}" controls class="max-w-xs rounded-lg">
-                                    Your browser does not support video playback.
-                                </video>
-                            </div>
-                            <div class="text-xs text-gray-400">${msg.fileName}</div>
-                        `;
-                    } else if (msg.fileCategory === 'audio') {
-                        // Display audio player
-                        fileContent = `
-                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg">
-                                <i data-lucide="music" class="w-6 h-6 text-orange-400"></i>
-                                <div class="flex-1">
-                                    <div class="text-sm font-medium">${msg.fileName}</div>
-                                    <audio src="${msg.fileData}" controls class="w-full mt-2 max-w-xs">
-                                        Your browser does not support audio playback.
-                                    </audio>
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        // Display document/file with download button
-                        fileContent = `
-                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors">
-                                <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
-                                <div class="flex-1 min-w-0">
-                                    <div class="text-sm font-medium truncate">${msg.fileName}</div>
-                                    <div class="text-xs text-gray-500">${formatFileSize(fileSize)}</div>
-                                </div>
-                                <a href="${msg.fileData}" download="${msg.fileName}" 
-                                    class="p-2 rounded-lg bg-brand-600 hover:bg-brand-500 transition-colors">
-                                    <i data-lucide="download" class="w-4 h-4"></i>
-                                </a>
-                            </div>
-                        `;
-                    }
-                }
-
-                const textContent = msg.text ? msg.text : '';
-
-                bubble.innerHTML = `
-                <div class="max-w-[75%] group relative">
-                    <!-- Actions -->
-                    <div class="message-actions absolute ${isMe ? 'right-full mr-2' : 'left-full ml-2'} top-1/2 -translate-y-1/2 flex gap-1 bg-black/50 backdrop-blur rounded-lg p-1 border border-white/10">
-                        <button class="p-1 hover:text-white text-gray-400"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a4 4 0 014 4v2a2 2 0 01-2 2h-6a2 2 0 01-2-2V6h-.01L3 10z"/></svg></button>
-                        <button class="p-1 hover:text-red-400 text-gray-400"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg></button>
-                    </div>
-
-                    <div class="p-3 rounded-2xl text-sm leading-relaxed relative z-10 ${isMe ? 'bubble-sent text-white rounded-tr-sm' : 'bubble-received text-gray-200 rounded-tl-sm'}">
-                        ${fileContent}
-                        ${textContent ? `<div class="mt-2">${textContent}</div>` : ''}
-                    </div>
-                    <div class="text-[10px] text-gray-500 mt-1 font-mono ${isMe ? 'text-right' : 'text-left'}">
-                        ${formatTime(msg.timestamp)}
-                    </div>
-                </div>
-            `;
-                DOM.messagesContainer.appendChild(bubble);
-            });
-
-            // Recreate Lucide icons for file type icons
             lucide.createIcons();
-
-            setTimeout(() => DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight, 10);
         }
 
-        function openChat(chatId) {
-            activeChatId = chatId;
-            window.activeChatId = chatId; // Keep window version in sync
-            mockChats[chatId].unread = 0;
-            saveState();
-            renderChatList();
+        async function openChat(id, type) {
+            activeChatId = id;
+            activeChatType = type;
+            window.activeChatId = id;
 
-            const contact = getContact(mockChats[chatId].contactId);
-
-            // Update Header
-            DOM.chatTitle.textContent = contact.name;
-            DOM.chatIdDisplay.textContent = mockChats[chatId].contactId;
-            DOM.chatAvatar.src = getAvatar(mockChats[chatId].contactId);
-
-            const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
-            DOM.chatStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black ${statusColor}`;
-
-            // Switch View
+            // UI Reset
             DOM.welcomeContainer.classList.add('hidden');
             DOM.activeChatInterface.classList.remove('hidden');
             DOM.activeChatInterface.classList.add('flex');
+            DOM.chatWindowCol.classList.add('active'); // Mobile
 
-            // Mobile Transition
-            DOM.chatWindowCol.classList.add('active');
+            if (type === 'dm') {
+                const chat = mockChats[id];
+                chat.unread = 0;
+                saveState();
 
-            renderMessages(chatId);
+                const contact = getContact(chat.contactId);
+                DOM.chatTitle.textContent = contact.name;
+                DOM.chatIdDisplay.textContent = chat.contactId;
+                DOM.chatAvatar.src = getAvatar(chat.contactId);
+
+                // Show Status Dot
+                const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
+                DOM.chatStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black ${statusColor}`;
+                DOM.chatStatusDot.classList.remove('hidden');
+
+                // Info Button -> DM Info
+                document.getElementById('info-btn').onclick = () => {
+                    document.getElementById('modal-contact-name-info').textContent = contact.name;
+                    document.getElementById('modal-contact-id').textContent = chat.contactId;
+                    document.getElementById('modal-info-avatar').src = getAvatar(chat.contactId);
+                    document.getElementById('modal-contact-status').textContent = contact.status;
+                    document.getElementById('modal-contact-role').textContent = contact.role;
+                    toggleModal(DOM.channelInfoModal, true);
+                };
+
+                // Render DM Messages
+                renderMessages(chat.messages);
+            } else {
+                // GROUP
+                const group = groups.find(g => g.id == id);
+                if (!group) return;
+
+                DOM.chatTitle.textContent = group.name;
+                DOM.chatIdDisplay.textContent = "Secure Group Channel";
+
+                const seed = group.name.replace(/[^a-zA-Z0-9]/g, '');
+                DOM.chatAvatar.src = group.image || `https://api.dicebear.com/7.x/identicon/svg?seed=${seed}&backgroundColor=transparent`;
+
+                // Hide Status Dot for Groups
+                DOM.chatStatusDot.classList.add('hidden');
+
+                // Info Button -> Group Members
+                document.getElementById('info-btn').onclick = () => {
+                    listGroupMembers(id, group.is_admin);
+                };
+
+                // Fetch Group Messages
+                try {
+                    const token = sessionStorage.getItem('token');
+                    const res = await fetch(`/api/groups/messages/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await res.json();
+
+                    // Transform to unified format if needed, but existing renderMessages logic is flexible
+                    // GroupMessage: { sender_id, text, time, file_data... }
+                    // We need to map it to match DM structure or update renderMessages to handle both.
+                    // Let's create a mapper.
+                    const mappedMsgs = data.messages.map(m => ({
+                        senderId: m.sender_id,
+                        senderName: m.sender_name, // Extra field for group
+                        senderAvatar: m.sender_avatar, // Extra
+                        text: m.text,
+                        timestamp: new Date(m.time).getTime(),
+                        fileData: m.file_data,
+                        fileName: m.file_name,
+                        fileType: m.file_type,
+                        fileCategory: m.file_type ? getCategoryFromType(m.file_type) : null
+                    }));
+                    renderMessages(mappedMsgs);
+                } catch (e) { console.error(e); }
+            }
+
+            renderChatList();
         }
 
-        // --- ACTIONS ---
+        function getCategoryFromType(mime) {
+            if (mime.startsWith('image/')) return 'photo';
+            if (mime.startsWith('video/')) return 'video';
+            if (mime.startsWith('audio/')) return 'audio';
+            return 'document';
+        }
 
-        function sendMessage(e) {
+        function renderMessages(messages) {
+            DOM.messagesContainer.innerHTML = '';
+
+            messages.forEach(msg => {
+                // For DM: senderId, currentUserId are strings. For Group: Integers.
+                // Weak compare == handles string vs int
+                const isMe = msg.senderId == currentUserId;
+                const bubble = document.createElement('div');
+                bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in mb-4 gap-3`;
+
+                // Avatar for Groups (Receive only)
+                const showAvatar = activeChatType === 'group' && !isMe;
+
+                // File Content
+                let fileContent = '';
+                if (msg.fileData) {
+                    const fileSize = msg.fileData.length * 0.75;
+                    const cat = msg.fileCategory || getCategoryFromType(msg.fileType || '');
+
+                    if (cat === 'photo') {
+                        fileContent = `<div class="mb-2"><img src="${msg.fileData}" class="max-w-xs rounded-lg cursor-pointer hover:opacity-90" onclick="window.open('${msg.fileData}', '_blank')"></div>`;
+                    } else if (cat === 'video') {
+                        fileContent = `<div class="mb-2"><video src="${msg.fileData}" controls class="max-w-xs rounded-lg"></video></div>`;
+                    } else if (cat === 'audio') {
+                        fileContent = `<div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg mb-2"><i data-lucide="music" class="w-6 h-6 text-orange-400"></i><audio src="${msg.fileData}" controls class="max-w-[200px]"></audio></div>`;
+                    } else {
+                        fileContent = `
+                            <div class="flex items-center gap-3 p-3 bg-white/5 rounded-lg hover:bg-white/10 transition-colors mb-2">
+                                <i data-lucide="file-text" class="w-6 h-6 text-blue-400"></i>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-sm font-medium truncate">${msg.fileName || 'File'}</div>
+                                    <div class="text-xs text-gray-500">${(fileSize / 1024).toFixed(1)} KB</div>
+                                </div>
+                                <a href="${msg.fileData}" download="${msg.fileName || 'file'}" class="p-2 rounded-lg bg-brand-600 hover:bg-brand-500"><i data-lucide="download" class="w-4 h-4"></i></a>
+                            </div>`;
+                    }
+                }
+
+                const contentHtml = `
+                    <div class="p-3 rounded-2xl text-sm leading-relaxed relative z-10 ${isMe ? 'bubble-sent text-white rounded-tr-sm' : 'bubble-received text-gray-200 rounded-tl-sm'}">
+                        ${fileContent}
+                        ${msg.text ? `<div>${msg.text}</div>` : ''}
+                    </div>
+                    <div class="text-[10px] text-gray-500 mt-1 font-mono ${isMe ? 'text-right' : 'text-left'}">
+                         ${(activeChatType === 'group' && !isMe) ? `<span class="text-brand-400 mr-2">${msg.senderName || 'User'}</span>` : ''} 
+                         ${formatTime(msg.timestamp)}
+                    </div>
+                `;
+
+                bubble.innerHTML = `
+                    ${showAvatar ? `<div class="w-8 h-8 rounded-full bg-gray-700 flex-shrink-0 overflow-hidden"><img src="${msg.senderAvatar || 'https://robohash.org/' + msg.senderId}" class="w-full h-full object-cover"></div>` : ''}
+                    
+                    <div class="max-w-[75%] group relative">
+                        <!-- Actions Pinned to Bubble -->
+                         <div class="message-actions absolute ${isMe ? 'right-full mr-2' : 'left-full ml-2'} top-1/2 -translate-y-1/2 flex gap-1 bg-black/50 backdrop-blur rounded-lg p-1 border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="p-1 hover:text-white text-gray-400"><i data-lucide="reply" class="w-3 h-3"></i></button>
+                        </div>
+                        ${contentHtml}
+                    </div>
+                `;
+
+                DOM.messagesContainer.appendChild(bubble);
+            });
+            lucide.createIcons();
+            setTimeout(() => DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight, 10);
+        }
+
+
+        // --- SENDING LOGIC ---
+        async function sendMessage(e) {
             e.preventDefault();
             const text = DOM.msgInput.value.trim();
             if (!text || !activeChatId) return;
 
-            mockChats[activeChatId].messages.push({
-                senderId: currentUserId,
-                text: text,
-                timestamp: Date.now()
-            });
-
+            // Reset Input
             DOM.msgInput.value = '';
-            DOM.sendBtn.disabled = true;
-            saveState();
-            renderMessages(activeChatId);
-            renderChatList();
 
-            // Simulate Retry/Network
-            showToast("Encrypted Packet Sent", "Delivery Confirmed");
+            if (activeChatType === 'dm') {
+                mockChats[activeChatId].messages.push({
+                    senderId: currentUserId,
+                    text: text,
+                    timestamp: Date.now()
+                });
+                saveState();
+                renderMessages(mockChats[activeChatId].messages);
+                renderChatList();
+            } else {
+                // GROUP SEND
+                try {
+                    const token = sessionStorage.getItem('token');
+                    await fetch('/api/groups/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ group_id: activeChatId, message: text })
+                    });
+                    // Refresh view
+                    openChat(activeChatId, 'group');
+                } catch (e) { showToast("Error", "Failed to send to server"); }
+            }
         }
 
-        // --- MODALS HELPER ---
+        // --- FILE LOGIC (HYBRID) ---
+        let pendingFile = null;
+        window.selectFileType = (category) => {
+            toggleModal(document.getElementById('file-upload-modal'), false);
+            const input = document.getElementById(`file-input-${category}`);
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (file.size > 5 * 1024 * 1024) { showToast('Error', 'File > 5MB'); return; }
+
+                const reader = new FileReader();
+                reader.onload = async (ev) => {
+                    const data = ev.target.result;
+                    // Send Logic
+                    if (activeChatType === 'dm') {
+                        mockChats[activeChatId].messages.push({
+                            senderId: currentUserId,
+                            text: '',
+                            timestamp: Date.now(),
+                            fileData: data,
+                            fileName: file.name,
+                            fileType: file.type,
+                            fileCategory: category
+                        });
+                        saveState();
+                        renderMessages(mockChats[activeChatId].messages);
+                        renderChatList();
+                    } else {
+                        // Group Logic
+                        try {
+                            const token = sessionStorage.getItem('token');
+                            await fetch('/api/groups/send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    group_id: activeChatId,
+                                    message: '',
+                                    file_data: data,
+                                    file_name: file.name,
+                                    file_type: file.type,
+                                    file_category: category
+                                })
+                            });
+                            openChat(activeChatId, 'group');
+                        } catch (e) { showToast('Error', 'Upload Failed'); }
+                    }
+                };
+                reader.readAsDataURL(file);
+                input.value = '';
+            };
+            input.click();
+        };
+
+
+        // --- GROUP MANAGEMENT LOGIC ---
+        // 1. Create Group
+        document.getElementById('create-group-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('group-name-input').value;
+            const desc = document.getElementById('group-desc-input').value;
+            try {
+                const token = sessionStorage.getItem('token');
+                await fetch('/api/groups/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ name, description: desc })
+                });
+                toggleModal(DOM.createGroupModal, false);
+                await loadGroups();
+                renderChatList();
+                showToast("Success", "Channel initialized");
+            } catch (e) { console.error(e); }
+        };
+
+        // 2. List Members
+        // 2. List Members
+        async function listGroupMembers(groupId, isAdmin) {
+            const token = sessionStorage.getItem('token');
+            const res = await fetch(`/api/groups/members/${groupId}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            const data = await res.json();
+
+            DOM.membersListContainer.innerHTML = '';
+
+            // Inject Edit Button if Admin
+            const oldEditBtn = document.getElementById('trigger-edit-group');
+            if (oldEditBtn) oldEditBtn.remove();
+
+            if (isAdmin) {
+                const header = DOM.membersListModal.querySelector('.flex.justify-between.items-center');
+                // Check if already added
+                if (!header.querySelector('#trigger-edit-group')) {
+                    const editBtn = document.createElement('button');
+                    editBtn.id = "trigger-edit-group";
+                    editBtn.className = "text-xs bg-white/10 px-2 py-1 rounded text-gray-300 hover:text-white mr-2";
+                    editBtn.innerHTML = `<i data-lucide="settings" class="w-3 h-3 inline mr-1"></i>Config`;
+                    editBtn.onclick = () => {
+                        toggleModal(DOM.membersListModal, false);
+                        openEditGroupModal(groupId);
+                    };
+                    // Insert before text, but actually header structure is: h3, button(close). 
+                    // Let's prepend to the close button container or just append to header but fix flex
+                    // Actually, easiest is to insert before the close button
+                    header.insertBefore(editBtn, header.lastElementChild);
+                }
+            }
+
+            data.members.forEach(m => {
+                const el = document.createElement('div');
+                el.className = "flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 group";
+
+                const removeBtn = (isAdmin && !m.is_admin) ?
+                    `<button class="opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:bg-red-500/10 rounded transition-all" 
+                      onclick="window.removeMember(${groupId}, ${m.id})"><i data-lucide="trash-2" class="w-4 h-4"></i></button>`
+                    : '';
+
+                el.innerHTML = `
+                     <img src="${m.avatar || 'https://robohash.org/' + m.id}" class="w-8 h-8 rounded-full bg-black">
+                     <div class="flex-1">
+                         <p class="text-sm text-white font-bold flex items-center gap-2">
+                            ${m.name} 
+                            ${m.is_admin ? '<span class="text-[10px] bg-brand-500/20 text-brand-400 px-1 rounded">ADMIN</span>' : ''}
+                         </p>
+                         <p class="text-[10px] text-gray-500">${m.email}</p>
+                     </div>
+                     ${removeBtn}
+                 `;
+                DOM.membersListContainer.appendChild(el);
+            });
+            toggleModal(DOM.membersListModal, true);
+            lucide.createIcons();
+
+            // Setup Add Member Trigger
+            document.getElementById('trigger-add-member').onclick = () => {
+                toggleModal(DOM.membersListModal, false); // Switch modals
+                toggleModal(DOM.addMemberModal, true);
+            };
+        }
+
+        async function removeMember(groupId, userId) {
+            if (!confirm("Revoke access for this operative?")) return;
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch(`/api/groups/${groupId}/members/${userId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    showToast("Success", "Operative removed");
+                    listGroupMembers(groupId, true); // Refresh list
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function openEditGroupModal(groupId) {
+            const group = groups.find(g => g.id == groupId);
+            if (!group) return;
+
+            document.getElementById('edit-group-name').value = group.name;
+            document.getElementById('edit-group-desc').value = group.description;
+            document.getElementById('edit-group-image').value = group.image || '';
+
+            toggleModal(DOM.editGroupModal, true);
+
+            document.getElementById('edit-group-form').onsubmit = async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('edit-group-name').value;
+                const desc = document.getElementById('edit-group-desc').value;
+                const img = document.getElementById('edit-group-image').value;
+
+                try {
+                    const token = sessionStorage.getItem('token');
+                    const res = await fetch(`/api/groups/${groupId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ name, description: desc, image_url: img })
+                    });
+
+                    if (res.ok) {
+                        showToast("Success", "Configuration Updated");
+                        toggleModal(DOM.editGroupModal, false);
+                        await loadGroups(); // Refresh local group data
+                        openChat(groupId, 'group'); // Refresh UI
+                    }
+                } catch (e) { console.error(e); showToast("Error", "Update failed"); }
+            };
+        }
+
+        // 3. Add Member
+        document.getElementById('add-member-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('member-email-input').value;
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/groups/add-member', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ group_id: activeChatId, email: email })
+                });
+                if (res.ok) {
+                    showToast('Success', 'Operative added');
+                    toggleModal(DOM.addMemberModal, false);
+                } else {
+                    const d = await res.json();
+                    showToast('Error', d.error);
+                }
+            } catch (e) { console.error(e); }
+        };
+
+
+        // --- INIT ---
+        window.onload = async () => {
+            lucide.createIcons();
+            await loadState(); // Await because it fetches groups
+            renderGlobalUser();
+            renderChatList();
+
+            // Input Listeners
+            DOM.msgInput.addEventListener('input', (e) => {
+                const isEmpty = e.target.value.trim() === '';
+                DOM.sendBtn.disabled = isEmpty;
+                DOM.micIcon.classList.toggle('hidden', !isEmpty);
+                DOM.sendIcon.classList.toggle('hidden', isEmpty);
+            });
+
+            document.getElementById('send-message-form').addEventListener('submit', sendMessage);
+            DOM.searchInput.addEventListener('input', renderChatList);
+
+            // Attach generic modal closers
+            document.querySelectorAll('button[data-action^="close"]').forEach(btn => {
+                btn.onclick = (e) => toggleModal(e.target.closest('.fixed'), false);
+            });
+
+            // Trigger Create Group Modal from Sidebar Header
+            const createGroupBtn = document.getElementById('create-group-btn');
+            if (createGroupBtn) {
+                createGroupBtn.onclick = () => toggleModal(DOM.createGroupModal, true);
+            }
+
+            const fileUploadModal = document.getElementById('file-upload-modal');
+            document.querySelector('button[data-action="attachment"]').onclick = () => toggleModal(fileUploadModal, true);
+
+            // Mobile Menu Logic
+            const mobileBtnWelcome = document.getElementById('mobile-menu-btn');
+            const mobileBtnHeader = document.getElementById('mobile-menu-toggle-btn');
+            const backBtn = document.getElementById('back-to-list-btn'); // Needs ID in HTML (checked active-chat-interface)
+            // ... Mobile logic specific to layout ...
+
+            // Poll for new messages if in group
+            setInterval(() => {
+                if (activeChatId && activeChatType === 'group') {
+                    openChat(activeChatId, 'group'); // Refresh view (simple polling)
+                }
+            }, 3000);
+        };
+
+        // Helper
         function toggleModal(modal, show) {
             if (show) {
                 modal.classList.remove('hidden');
@@ -969,6 +1763,9 @@
             }
         }
 
+        // Expose to window for HTML onclick handlers
+        window.removeMember = removeMember;
+
         function showToast(title, msg) {
             const t = document.getElementById('notification-toast');
             t.querySelector('h4').textContent = title;
@@ -977,286 +1774,71 @@
             setTimeout(() => t.classList.add('translate-y-32', 'opacity-0'), 3000);
         }
 
-        // --- EVENT LISTENERS ---
+        // ===== CLASSES EVENT HANDLERS =====
 
-        window.onload = () => {
-            lucide.createIcons();
-            loadState();
-            renderGlobalUser();
-            renderChatList();
-
-            // Input Handling
-            DOM.msgInput.addEventListener('input', (e) => {
-                const isEmpty = e.target.value.trim() === '';
-                DOM.sendBtn.disabled = isEmpty;
-                DOM.micIcon.classList.toggle('hidden', !isEmpty);
-                DOM.sendIcon.classList.toggle('hidden', isEmpty);
-                e.target.style.height = 'auto';
-                e.target.style.height = e.target.scrollHeight + 'px';
-            });
-
-            document.getElementById('send-message-form').addEventListener('submit', sendMessage);
-            DOM.searchInput.addEventListener('input', renderChatList);
-
-            // === Delete Confirmation Modal ===
-            const deleteModal = document.getElementById('delete-confirmation-modal');
-            const deleteConfirmBtn = document.getElementById('confirm-delete-btn');
-            const deleteCancelBtn = document.getElementById('cancel-delete-btn');
-
-            // Shared Logic for showing delete modal
-            window.showDeleteConfirmation = (messageId) => {
-                // Ensure modal exists (it is in the HTML below)
-                if (deleteModal) {
-                    toggleModal(deleteModal, true);
-
-                    // Attach one-time listener for confirm
-                    deleteConfirmBtn.onclick = () => {
-                        window.performMessageDeletion(messageId);
-                        toggleModal(deleteModal, false);
-                    };
-
-                    deleteCancelBtn.onclick = () => {
-                        toggleModal(deleteModal, false);
-                    };
-                }
-            };
-            // =================================
-
-            // Mobile Nav
-            const mobileBtnWelcome = document.getElementById('mobile-menu-btn');
-            const mobileBtnHeader = document.getElementById('mobile-menu-toggle-btn');
-            const backBtn = document.getElementById('back-to-list-btn');
-            const sidebar = document.querySelector('aside');
-            const mobileBackdrop = document.getElementById('mobile-backdrop');
-
-            if (mobileBtnWelcome) {
-                mobileBtnWelcome.onclick = () => {
-                    console.log('Welcome mobile menu clicked');
-                    if (sidebar && mobileBackdrop) {
-                        sidebar.classList.toggle('mobile-menu-open');
-                        mobileBackdrop.classList.toggle('active');
-                    }
-                };
-            }
-
-            if (mobileBtnHeader) {
-                mobileBtnHeader.onclick = () => {
-                    console.log('Header mobile menu clicked');
-                    if (sidebar && mobileBackdrop) {
-                        sidebar.classList.toggle('mobile-menu-open');
-                        mobileBackdrop.classList.toggle('active');
-                    }
-                };
-            } else {
-                console.error('Mobile menu toggle button not found!');
-            }
-
-            if (backBtn) {
-                backBtn.onclick = () => {
-                    console.log('Back button clicked');
-                    DOM.chatWindowCol.classList.remove('active');
-                    activeChatId = null;
-                };
-            }
-
-            // Click backdrop to close mobile nav
-            if (mobileBackdrop) {
-                mobileBackdrop.onclick = () => {
-                    sidebar.classList.remove('mobile-menu-open');
-                    mobileBackdrop.classList.remove('active');
-                };
-            }
-
-            // Recreate icons after a slight delay to ensure all DOM is ready
-            setTimeout(() => {
-                lucide.createIcons();
-                console.log('Icons recreated');
-            }, 100);
-
-            // Modal Triggers
-            document.getElementById('add-contact-btn').onclick = () => toggleModal(DOM.addContactModal, true);
-            document.getElementById('view-profile-btn').onclick = () => {
-                // Populate Profile Modal
-                document.getElementById('profile-modal-name').textContent = currentUserName;
-                document.getElementById('profile-modal-id').textContent = currentUserId;
-                document.getElementById('profile-modal-avatar').src = getAvatar(currentUserId);
-                toggleModal(DOM.userProfileModal, true);
-            };
-            document.getElementById('info-btn').onclick = () => {
-                if (!activeChatId) return;
-                const c = getContact(mockChats[activeChatId].contactId);
-                document.getElementById('modal-contact-name-info').textContent = c.name;
-                document.getElementById('modal-contact-id').textContent = mockChats[activeChatId].contactId;
-                document.getElementById('modal-info-avatar').src = getAvatar(mockChats[activeChatId].contactId);
-                document.getElementById('modal-contact-status').textContent = c.status;
-                document.getElementById('modal-contact-role').textContent = c.role;
-                toggleModal(DOM.channelInfoModal, true);
-            };
-
-            // Close Buttons
-            document.querySelectorAll('button[data-action^="close"]').forEach(btn => {
-                btn.onclick = (e) => {
-                    const modal = e.target.closest('.fixed'); // Find parent modal
-                    toggleModal(modal, false);
-                }
-            });
-
-            // File Upload Button
-            const fileUploadModal = document.getElementById('file-upload-modal');
-            document.querySelector('button[data-action="attachment"]').onclick = () => {
-                toggleModal(fileUploadModal, true);
-            };
-
-            // File Type Selection and Upload Logic
-            let pendingFile = null;
-            let pendingFileCategory = null;
-
-            window.selectFileType = (category) => {
-                console.log('📁 File type selected:', category);
-                const inputId = `file-input-${category}`;
-                const fileInput = document.getElementById(inputId);
-
-                fileInput.onchange = (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-
-                    console.log('📄 File selected:', { name: file.name, size: file.size, type: file.type });
-
-                    // Validate file size (5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                        console.error('❌ File too large:', file.size);
-                        showToast('Error', 'File too large. Maximum size is 5MB');
-                        e.target.value = '';
-                        return;
-                    }
-
-                    console.log('📖 Reading file as base64...');
-                    // Read file as base64
-                    const reader = new FileReader();
-                    reader.onload = (event) => {
-                        const base64Data = event.target.result;
-                        console.log('✅ File read successfully, size:', Math.round(base64Data.length / 1024), 'KB');
-
-                        // Store file info
-                        pendingFile = {
-                            data: base64Data,
-                            name: file.name,
-                            type: file.type,
-                            category: category,
-                            size: file.size
-                        };
-
-                        console.log('💾 Pending file stored:', { name: pendingFile.name, category: pendingFile.category });
-
-                        // Close modal
-                        toggleModal(fileUploadModal, false);
-
-                        console.log('🚀 Calling sendFileMessage...');
-                        // Send file immediately
-                        sendFileMessage();
-
-                        // Clear input
-                        e.target.value = '';
-                    };
-
-                    reader.onerror = () => {
-                        console.error('❌ Failed to read file');
-                        showToast('Error', 'Failed to read file');
-                        e.target.value = '';
-                    };
-
-                    reader.readAsDataURL(file);
-                };
-
-                fileInput.click();
-            };
-
-            // Send file message
-            function sendFileMessage() {
-                console.log('📨 sendFileMessage called');
-
-                // Use window.activeChatId if local activeChatId is not set
-                const chatId = activeChatId || window.activeChatId;
-
-                console.log('   - pendingFile:', pendingFile ? { name: pendingFile.name, category: pendingFile.category } : 'null');
-                console.log('   - local activeChatId:', activeChatId);
-                console.log('   - window.activeChatId:', window.activeChatId);
-                console.log('   - using chatId:', chatId);
-                console.log('   - sendFileMessageViaAPI exists:', typeof window.sendFileMessageViaAPI === 'function');
-
-                if (!pendingFile || !chatId) {
-                    console.error('❌ Cannot send file: pendingFile or chatId is missing');
-                    return;
-                }
-
-                // If integration.js with API is loaded, use it
-                if (typeof window.sendFileMessageViaAPI === 'function') {
-                    console.log('🌐 Using API to send file');
-                    // API is available, send via backend
-                    window.sendFileMessageViaAPI(
-                        pendingFile.data,
-                        pendingFile.name,
-                        pendingFile.type,
-                        pendingFile.category
-                    );
-                    pendingFile = null;
-                    return;
-                }
-
-                console.log('💾 Using local storage to send file');
-                // Otherwise, use local state (fallback for testing without backend)
-                mockChats[chatId].messages.push({
-                    senderId: currentUserId,
-                    text: '',
-                    timestamp: Date.now(),
-                    fileData: pendingFile.data,
-                    fileName: pendingFile.name,
-                    fileType: pendingFile.type,
-                    fileCategory: pendingFile.category
-                });
-
-                saveState();
-                renderMessages(chatId);
-                renderChatList();
-
-                showToast('File Sent', `${pendingFile.name} uploaded successfully`);
-                pendingFile = null;
-            }
-
-            // Add Contact Logic
-            document.getElementById('add-contact-form').onsubmit = (e) => {
+        // Classes nav click handler
+        if (DOM.classesNavItem) {
+            DOM.classesNavItem.onclick = (e) => {
                 e.preventDefault();
-                const id = document.getElementById('contact-id-input').value.toUpperCase();
-                if (!id) return;
-
-                if (mockChats[id]) { showToast("Error", "Channel already exists"); return; }
-
-                mockChats[id] = { contactId: id, unread: 0, messages: [] };
-                saveState();
-                renderChatList();
-                toggleModal(DOM.addContactModal, false);
-                showToast("Success", "Secure Channel Established");
-                document.getElementById('contact-id-input').value = '';
+                // Show a simple list of classes in a modal or render them in chat list
+                // For now, we'll just toggle the create modal
+                toggleModal(DOM.createClassModal, true);
             };
+        }
 
-            // Profile Avatar Click -> Dropdown
-            DOM.globalAvatar.onclick = (e) => {
-                e.stopPropagation();
-                DOM.statusDropdown.classList.toggle('hidden');
+        // Create Class form
+        const createClassForm = document.getElementById('create-class-form');
+        if (createClassForm) {
+            createClassForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await createClass();
             };
-            document.onclick = () => DOM.statusDropdown.classList.add('hidden');
+        }
 
-            // Status Change
-            document.querySelectorAll('#status-dropdown a').forEach(a => {
-                a.onclick = (e) => {
-                    e.preventDefault();
-                    currentUserStatus = e.target.closest('a').dataset.status;
-                    saveState();
-                    renderGlobalUser();
-                }
-            });
-        };
+        // Create Group in Class form
+        const createGroupInClassForm = document.getElementById('create-group-in-class-form');
+        if (createGroupInClassForm) {
+            createGroupInClassForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await createGroupInClass();
+            };
+        }
+
+        // Add Class Members form
+        const addClassMembersForm = document.getElementById('add-class-members-form');
+        if (addClassMembersForm) {
+            addClassMembersForm.onsubmit = async (e) => {
+                e.preventDefault();
+                await addClassMembers();
+            };
+        }
+
+        // Expose to window for dynamic onclick handlers
+        window.viewClassDetails = viewClassDetails;
+        window.toggleModal = toggleModal;
+
+        // Dynamic handlers (set after class detail modal opens)
+        document.addEventListener('click', (e) => {
+            // Create Subject Group button in class detail modal
+            if (e.target.id === 'create-subject-group-btn' || e.target.closest('#create-subject-group-btn')) {
+                e.preventDefault();
+                const className = document.getElementById('class-detail-name').textContent;
+                document.getElementById('parent-class-name').textContent = className;
+                toggleModal(DOM.classDetailModal, false);
+                toggleModal(DOM.createGroupInClassModal, true);
+            }
+
+            // Add Class Members button
+            if (e.target.id === 'add-class-members-btn' || e.target.closest('#add-class-members-btn')) {
+                e.preventDefault();
+                toggleModal(DOM.classDetailModal, false);
+                toggleModal(DOM.addClassMembersModal, true);
+            }
+        });
+
+        // ===== END CLASSES HANDLERS =====
     </script>
+
     <!-- Delete Confirmation Modal -->
     <div id="delete-confirmation-modal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog"
         aria-modal="true">

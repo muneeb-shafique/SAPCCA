@@ -164,10 +164,21 @@
             const chatListContainer = document.getElementById('chat-list-container');
             if (!chatListContainer) return;
 
-            chatListContainer.innerHTML = '';
+            // DON'T CLEAR THE ENTIRE CONTAINER! That removes groups.
+            // Instead, find or create the DM section only
+            let dmSection = document.getElementById('integration-dm-section');
+
+            if (!dmSection) {
+                dmSection = document.createElement('div');
+                dmSection.id = 'integration-dm-section';
+                // Append after groups (which are rendered by chat.html)
+                chatListContainer.appendChild(dmSection);
+            }
+
+            dmSection.innerHTML = ''; // Only clear the DM section
 
             if (friends.length === 0) {
-                chatListContainer.innerHTML = `
+                dmSection.innerHTML = `
                     <div class="flex flex-col items-center justify-center p-8 text-center">
                         <div class="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center mb-4">
                             <i data-lucide="users" class="w-10 h-10 text-gray-600"></i>
@@ -195,7 +206,7 @@
                 `;
 
                 friendEl.onclick = () => openChat(friend);
-                chatListContainer.appendChild(friendEl);
+                dmSection.appendChild(friendEl);
             });
 
             lucide.createIcons();
@@ -788,6 +799,15 @@
             userIdDisplays.forEach(el => {
                 if (el) el.textContent = userId;
             });
+
+            // Populate New Academic Fields in Settings
+            const roleEl = document.getElementById('display-role');
+            const deptEl = document.getElementById('display-dept');
+            const desigEl = document.getElementById('display-desig');
+
+            if (roleEl) roleEl.textContent = profile.role || 'Student';
+            if (deptEl) deptEl.textContent = profile.department || 'N/A';
+            if (desigEl) desigEl.textContent = profile.faculty_designation || 'N/A';
         } catch (error) {
             console.error('Failed to load profile settings:', error);
         }
