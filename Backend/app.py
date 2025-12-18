@@ -7,7 +7,7 @@ from config import Config
 import os
 
 # socket server
-socketio = SocketIO(cors_allowed_origins="*")
+socketio = SocketIO(cors_allowed_origins="*", max_http_buffer_size=5 * 1024 * 1024)
 
 def create_app():
     app = Flask(__name__)

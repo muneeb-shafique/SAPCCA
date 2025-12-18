@@ -783,32 +783,20 @@
 
             DOM.messagesContainer.innerHTML = ''; // Loading...
 
+            // Auto-join if not member
+            if (!activeGroupIsMember) {
+                await joinGroup(group.id, true); // Silent auto-join
+            }
+
+            // Always show input area for direct access
+            DOM.inputArea.classList.remove('hidden');
+            document.getElementById('join-group-banner')?.remove();
+
             // Load Chat History
             await loadGroupMessages(group.id);
-
-            // Toggle Input or Join Button
-            if (activeGroupIsMember) {
-                DOM.inputArea.classList.remove('hidden');
-                document.getElementById('join-group-banner')?.remove();
-                DOM.messagesContainer.scrollTop = DOM.messagesContainer.scrollHeight;
-            } else {
-                DOM.inputArea.classList.add('hidden');
-                if (!document.getElementById('join-group-banner')) {
-                    const joinDiv = document.createElement('div');
-                    joinDiv.id = 'join-group-banner';
-                    joinDiv.className = "flex flex-col items-center justify-center p-6 border-t border-white/5 bg-white/5 backdrop-blur-md absolute bottom-0 left-0 right-0 z-20";
-                    joinDiv.innerHTML = `
-                        <p class="text-sm text-gray-400 mb-3">You are viewing this channel in preview mode.</p>
-                        <button id="join-group-btn" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-lg shadow-indigo-500/20">Join Channel</button>
-                    `;
-                    DOM.messagesContainer.parentElement.appendChild(joinDiv);
-
-                    document.getElementById('join-group-btn').onclick = () => joinGroup(group.id);
-                }
-            }
         }
 
-        async function joinGroup(groupId) {
+        async function joinGroup(groupId, isSilent = false) {
             try {
                 const token = sessionStorage.getItem('token');
                 const userEmail = currentUser.email;
@@ -821,13 +809,14 @@
                 });
 
                 if (res.ok) {
-                    showToast('Success', 'Joined Channel');
+                    if (!isSilent) showToast('Success', 'Joined Channel');
                     activeGroupIsMember = true;
                     DOM.inputArea.classList.remove('hidden');
                     document.getElementById('join-group-banner')?.remove();
                 } else {
                     const err = await res.json();
-                    showToast('Error', err.error || 'Failed to join', true);
+                    // If already member, just ignore error in silent mode, otherwise show toast
+                    if (!isSilent) showToast('Error', err.error || 'Failed to join', true);
                 }
             } catch (e) { console.error(e); }
         }

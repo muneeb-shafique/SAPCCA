@@ -16,7 +16,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Lucide Icons -->
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
 
     <!-- Tailwind Config -->
     <script>
@@ -261,8 +265,14 @@
                     <span class="font-medium">Encrypted Chats</span>
                 </a>
 
-                <!-- Classes -->
-                <!-- Classes Removed - Now Independent System -->
+                <!-- Classes (Faculty Only) -->
+                <a href="#" id="classes-nav-item"
+                    class="hidden flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
+                    <i data-lucide="graduation-cap" class="w-5 h-5 group-hover:text-brand-400 transition-colors"></i>
+                    <span class="font-medium">Classes</span>
+                    <span id="classes-count"
+                        class="ml-auto bg-indigo-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(139,92,246,0.4)] hidden">0</span>
+                </a>
 
                 <a href="friends.html"
                     class="flex items-center gap-4 p-3 rounded-lg text-gray-400 hover:text-white hover:bg-white/5 transition-all group">
@@ -335,7 +345,12 @@
                     <h2 class="text-lg font-display font-bold text-white tracking-wide">Transmissions</h2>
                 </div>
                 <div class="flex gap-2">
-
+                    <button id="create-group-btn"
+                        class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
+                        title="Create Group">
+                        <i data-lucide="users" class="w-4 h-4"></i>
+                        <span class="sr-only">Create Group</span>
+                    </button>
                     <button id="add-contact-btn"
                         class="w-8 h-8 rounded-lg bg-white/5 hover:bg-brand-500/20 hover:text-brand-400 flex items-center justify-center transition-colors"
                         title="Add Contact">
@@ -688,7 +703,297 @@
         </div>
     </div>
 
+    <!-- 6. Create Group Modal -->
+    <div id="create-group-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Create Secure Channel</h3>
+                <button data-action="close-create-group-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-group-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CHANNEL NAME</label>
+                        <input type="text" id="group-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Project Alpha">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="group-desc-input" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Operational details..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        Initialize Channel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <!-- 7. Members List Modal -->
+    <div id="members-list-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Channel Operatives</h3>
+                <button data-action="close-members-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <div id="members-list-container" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                <!-- Members injected here -->
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/5">
+                <button id="trigger-add-member"
+                    class="w-full py-2 rounded-lg border border-dashed border-white/20 text-gray-400 hover:text-white hover:border-brand-500 hover:bg-brand-500/5 transition-all text-sm">
+                    + Add Operative
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. Add Member Modal -->
+    <div id="add-member-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-sm p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-display font-bold text-white">Add Personnel</h3>
+                <button data-action="close-add-member-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-member-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">USER EMAIL</label>
+                        <input type="email" id="member-email-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="agent@sapcca.com">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg">
+                        Grant Access
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 9. Edit Group Modal -->
+    <div id="edit-group-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Configure Channel</h3>
+                <button data-action="close-edit-group-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="edit-group-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CHANNEL NAME</label>
+                        <input type="text" id="edit-group-name" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="edit-group-desc" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">LOGO URL (Optional)</label>
+                        <input type="text" id="edit-group-image"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        Save Configuration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 10. Create Class Modal (Faculty Only) -->
+    <div id="create-class-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-indigo-500/20 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-xl font-display font-bold text-white">Create Class</h3>
+                    <p class="text-xs text-indigo-400 font-mono mt-1">FACULTY ONLY // COMMUNITY CHANNEL</p>
+                </div>
+                <button data-action="close-create-class-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-class-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">CLASS NAME</label>
+                        <input type="text" id="class-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Computer Science - Fall 2025">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="class-desc-input" rows="3"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Class description and details..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">ICON URL (Optional)</label>
+                        <input type="text" id="class-icon-input"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none placeholder-gray-700"
+                            placeholder="https://example.com/icon.png">
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(139,92,246,0.3)]">
+                        <i data-lucide="graduation-cap" class="w-4 h-4 inline mr-2"></i>
+                        Create Class
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 11. Class Detail Modal -->
+    <div id="class-detail-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-2xl p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-indigo-500/20 bg-[#111317] max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-start mb-6">
+                <div class="flex items-center gap-4">
+                    <div
+                        class="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                        <i data-lucide="graduation-cap" class="w-8 h-8 text-white"></i>
+                    </div>
+                    <div>
+                        <h3 id="class-detail-name" class="text-2xl font-display font-bold text-white">Class Name</h3>
+                        <p id="class-detail-desc" class="text-sm text-gray-400">Description</p>
+                    </div>
+                </div>
+                <button data-action="close-class-detail-modal" class="text-gray-500 hover:text-white"><i data-lucide="x"
+                        class="w-5 h-5"></i></button>
+            </div>
+
+            <!-- Subject Groups Section -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="folder" class="w-5 h-5 text-indigo-400"></i>
+                        Subject Groups
+                    </h4>
+                    <button id="create-subject-group-btn"
+                        class="px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-400 rounded-lg text-sm font-medium transition-colors border border-indigo-500/30">
+                        <i data-lucide="plus" class="w-4 h-4 inline mr-1"></i>
+                        Add Subject
+                    </button>
+                </div>
+                <div id="class-groups-list" class="space-y-2">
+                    <!-- Groups will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Members Section -->
+            <div>
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i data-lucide="users" class="w-5 h-5 text-brand-400"></i>
+                        Members <span id="class-members-count" class="text-sm text-gray-500">(0)</span>
+                    </h4>
+                    <button id="add-class-members-btn"
+                        class="px-3 py-1.5 bg-brand-500/20 hover:bg-brand-500/30 text-brand-400 rounded-lg text-sm font-medium transition-colors border border-brand-500/30">
+                        <i data-lucide="user-plus" class="w-4 h-4 inline mr-1"></i>
+                        Add Members
+                    </button>
+                </div>
+                <div id="class-members-list" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    <!-- Members will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 12. Add Class Members Modal -->
+    <div id="add-class-members-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-lg font-display font-bold text-white">Add Class Members</h3>
+                <button data-action="close-add-class-members-modal" class="text-gray-500 hover:text-white"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="add-class-members-form">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">EMAIL ADDRESSES (One per line)</label>
+                        <textarea id="class-members-emails-input" rows="5" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700 font-mono text-sm"
+                            placeholder="student1@example.com
+student2@example.com
+faculty@example.com"></textarea>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-gray-400 cursor-pointer">
+                        <input type="checkbox" id="make-moderator-checkbox"
+                            class="rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500">
+                        Make moderators (can create groups)
+                    </label>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all shadow-lg">
+                        <i data-lucide="user-check" class="w-4 h-4 inline mr-2"></i>
+                        Add Members
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 13. Create Group in Class Modal -->
+    <div id="create-group-in-class-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden opacity-0 transition-opacity duration-300">
+        <div
+            class="glass-card w-full max-w-md p-6 rounded-2xl shadow-2xl transform scale-95 transition-transform duration-300 border border-white/10 bg-[#111317]">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-display font-bold text-white">Create Subject Group</h3>
+                <button data-action="close-create-group-in-class-modal" class="text-gray-500 hover:text-white"><i
+                        data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form id="create-group-in-class-form">
+                <div class="space-y-4">
+                    <div class="p-3 bg-indigo-500/10 rounded-lg border border-indigo-500/30">
+                        <p class="text-xs text-indigo-400 font-mono">PARENT CLASS</p>
+                        <p id="parent-class-name" class="text-white font-semibold mt-1">Class Name</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">SUBJECT NAME</label>
+                        <input type="text" id="subject-name-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="e.g. Database Management Systems">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-500 mb-2">DESCRIPTION</label>
+                        <textarea id="subject-desc-input" rows="2"
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-brand-500 focus:outline-none placeholder-gray-700"
+                            placeholder="Subject details..."></textarea>
+                    </div>
+                    <button type="submit"
+                        class="w-full py-3 rounded-lg bg-brand-600 hover:bg-brand-500 text-white font-bold transition-all shadow-[0_0_20px_rgba(14,165,233,0.3)]">
+                        <i data-lucide="folder-plus" class="w-4 h-4 inline mr-2"></i>
+                        Create Subject Group
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         // --- STATE & DATA ---
@@ -782,26 +1087,90 @@
                 else mockChats = {};
 
                 // 3. Load Groups from API
-                // await loadGroups(); // Groups moved to classes.html
+                await loadGroups();
 
                 // 4. Load Classes from API (if faculty)
-                // if (isFaculty()) {
-                //    await loadClasses(); // Classes moved to classes.html
-                // }
+                if (isFaculty()) {
+                    await loadClasses();
+                    // Show classes nav item for faculty
+                    if (DOM.classesNavItem) {
+                        DOM.classesNavItem.classList.remove('hidden');
+                        DOM.classesNavItem.classList.add('flex');
+                    }
+                }
 
             } catch (e) { console.error("Load Error", e); }
         }
 
         async function loadGroups() {
-            // Moved to classes.html
-            console.log('[GROUPS] Functionality moved to classes.html');
-            groups = [];
+            try {
+                const token = sessionStorage.getItem('token');
+                console.log('[GROUPS] Loading groups, token exists:', !!token);
+
+                if (!token) {
+                    console.warn('[GROUPS] No token found, skipping group load');
+                    return;
+                }
+
+                const res = await fetch('/api/groups/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                console.log('[GROUPS] API Response status:', res.status);
+
+                if (!res.ok) {
+                    console.error('[GROUPS] API error:', res.status, res.statusText);
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('[GROUPS] API Response data:', data);
+
+                if (data.groups) {
+                    groups = data.groups;
+                    console.log('[GROUPS] Loaded', groups.length, 'groups');
+                } else {
+                    console.warn('[GROUPS] No groups array in response');
+                }
+            } catch (e) {
+                console.error("[GROUPS] Load Error:", e);
+            }
         }
 
         async function loadClasses() {
-            // Moved to classes.html
-            console.log('[CLASSES] Functionality moved to classes.html');
-            classes = [];
+            try {
+                const token = sessionStorage.getItem('token');
+                console.log('[CLASSES] Loading classes, token exists:', !!token);
+
+                if (!token) {
+                    console.warn('[CLASSES] No token found, skipping class load');
+                    return;
+                }
+
+                const res = await fetch('/api/classes/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                console.log('[CLASSES] API Response status:', res.status);
+
+                if (!res.ok) {
+                    console.error('[CLASSES] API error:', res.status, res.statusText);
+                    return;
+                }
+
+                const data = await res.json();
+                console.log('[CLASSES] API Response data:', data);
+
+                if (data.classes) {
+                    classes = data.classes;
+                    console.log('[CLASSES] Loaded', classes.length, 'classes');
+
+                    // Update badge
+                    const badge = document.getElementById('classes-count');
+                    if (badge && classes.length > 0) {
+                        badge.textContent = classes.length;
+                        badge.classList.remove('hidden');
+                    }
+                } else {
+                    console.warn('[CLASSES] No classes array in response');
+                }
+            } catch (e) {
+                console.error("[CLASSES] Load Error:", e);
+            }
         }
 
         function saveState() {
@@ -822,7 +1191,78 @@
             DOM.chatListContainer.innerHTML = '';
             const filter = DOM.searchInput.value.toLowerCase();
 
-            // --- SECTION: DIRECT MESSAGES ---
+            // --- SECTION 1: GROUPS ---
+            const groupsHeader = document.createElement('div');
+            groupsHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-2";
+            groupsHeader.innerHTML = `<span>Group Channels</span>  <button id="trigger-create-group" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+            DOM.chatListContainer.appendChild(groupsHeader);
+            // Re-attach listener immediately
+            groupsHeader.querySelector('#trigger-create-group').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createGroupModal, true); };
+
+            if (groups.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = "px-3 py-2 text-xs text-gray-600 italic";
+                empty.textContent = "No active channels";
+                DOM.chatListContainer.appendChild(empty);
+            } else {
+                groups.forEach(g => {
+                    if (filter && !g.name.toLowerCase().includes(filter)) return;
+
+                    const isActive = (activeChatId == g.id && activeChatType === 'group');
+                    const el = document.createElement('div');
+                    el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
+                    el.onclick = () => openChat(g.id, 'group');
+
+                    const seed = g.name.replace(/[^a-zA-Z0-9]/g, '');
+
+                    el.innerHTML = `
+                        <div class="relative flex-shrink-0">
+                           <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30 ring-2 ring-transparent ${isActive ? 'ring-indigo-500/50' : ''}">
+                                ${g.name.substring(0, 2).toUpperCase()}
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h4 class="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">${g.name}</h4>
+                            </div>
+                            <p class="text-xs text-gray-400 truncate">${g.description || 'Secure Channel'}</p>
+                        </div>
+                    `;
+                    DOM.chatListContainer.appendChild(el);
+                });
+            }
+            lucide.createIcons();
+
+            // --- SECTION 2: CLASSES (Faculty Only) ---
+            if (isFaculty() && classes.length > 0) {
+                const classesHeader = document.createElement('div');
+                classesHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
+                classesHeader.innerHTML = `<span>Classes</span> <button id="trigger-create-class" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+                DOM.chatListContainer.appendChild(classesHeader);
+                classesHeader.querySelector('#trigger-create-class').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createClassModal, true); };
+
+                classes.forEach(cls => {
+                    if (filter && !cls.name.toLowerCase().includes(filter)) return;
+
+                    const classEl = document.createElement('div');
+                    classEl.className = 'p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:bg-indigo-500/10 hover:border-indigo-500/30 flex items-center gap-3';
+                    classEl.innerHTML = `
+                        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-bold text-white truncate">${cls.name}</h4>
+                            <p class="text-xs text-gray-400">${cls.group_count} subject${cls.group_count !== 1 ? 's' : ''}</p>
+                        </div>
+                        ${cls.is_moderator ? '<span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">MOD</span>' : ''}
+                    `;
+                    classEl.onclick = () => viewClassDetails(cls.id);
+                    DOM.chatListContainer.appendChild(classEl);
+                });
+                lucide.createIcons();
+            }
+
+            // --- SECTION 3: DIRECT MESSAGES ---
             const dmHeader = document.createElement('div');
             dmHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
             dmHeader.innerHTML = `<span>Direct Messages</span>`;
