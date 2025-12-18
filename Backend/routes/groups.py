@@ -99,6 +99,42 @@ def add_member():
 
     return jsonify({"message": "Member added successfully", "user_id": target_user_id, "name": target_user.display_name}), 200
 
+@groups_bp.post("/join")
+@jwt_required()
+def join_group():
+    """Allow class members to auto-join groups that belong to their class"""
+    uid = int(get_jwt_identity())
+    data = request.json
+    
+    group_id = data.get("group_id")
+    if not group_id:
+        return jsonify({"error": "group_id is required"}), 400
+    
+    # Get the group
+    group = Group.query.get(group_id)
+    if not group:
+        return jsonify({"error": "Group not found"}), 404
+    
+    # Check if already a member
+    existing = GroupMember.query.filter_by(group_id=group_id, user_id=uid).first()
+    if existing:
+        return jsonify({"message": "Already a member"}), 200
+    
+    # If group belongs to a class, verify user is a class member
+    if group.class_id:
+        class_membership = ClassMember.query.filter_by(class_id=group.class_id, user_id=uid).first()
+        if not class_membership:
+            return jsonify({"error": "You must be a member of this class to join this group"}), 403
+        
+        # Auto-join: Add user to group
+        new_member = GroupMember(group_id=group_id, user_id=uid, is_admin=False)
+        db.session.add(new_member)
+        db.session.commit()
+        return jsonify({"message": "Successfully joined group"}), 200
+    else:
+        # For non-class groups, require existing membership to add
+        return jsonify({"error": "This group requires an invitation"}), 403
+
 @groups_bp.get("/members/<int:group_id>")
 @jwt_required()
 def get_group_members(group_id):

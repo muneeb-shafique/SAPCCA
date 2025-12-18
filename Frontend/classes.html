@@ -536,6 +536,13 @@
 
             // Setup Event Listeners
             setupEventListeners();
+
+            // Poll for new messages (auto-refresh every 3 seconds)
+            setInterval(() => {
+                if (activeGroupId) {
+                    loadGroupMessages(activeGroupId);
+                }
+            }, 3000);
         }
 
         function setupUserUI() {
@@ -589,25 +596,31 @@
                     return;
                 }
 
-                // Confirm send
-                const proceed = confirm(`Send ${file.name}?`);
-                if (!proceed) { DOM.fileInput.value = ''; return; }
-
                 const reader = new FileReader();
                 reader.onload = async (ev) => {
                     const data = ev.target.result;
-                    // Send directly via socket as "message" with file attachment
-                    // Or implement specific handling.
-                    // Emulating chat.html logic but utilizing socket for real-time
-                    socket.emit('send_group_message', {
-                        sender_id: currentUser.id,
-                        group_id: activeGroupId,
-                        message: '', // Empty text
-                        file_data: data,
-                        file_name: file.name,
-                        file_type: file.type,
-                        file_category: getCategoryFromType(file.type)
-                    });
+                    const token = sessionStorage.getItem('token');
+
+                    try {
+                        await fetch('/api/groups/send', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                            body: JSON.stringify({
+                                group_id: activeGroupId,
+                                message: '',
+                                file_data: data,
+                                file_name: file.name,
+                                file_type: file.type,
+                                file_category: getCategoryFromType(file.type)
+                            })
+                        });
+                        // Refresh messages
+                        await loadGroupMessages(activeGroupId);
+                        showToast('Success', 'File sent');
+                    } catch (e) {
+                        console.error('[FILE] Upload Error:', e);
+                        showToast('Error', 'Upload failed', true);
+                    }
 
                     DOM.fileInput.value = '';
                 };
@@ -783,42 +796,58 @@
 
             DOM.messagesContainer.innerHTML = ''; // Loading...
 
-            // Auto-join if not member
+            // Auto-join if not member (works for class groups)
             if (!activeGroupIsMember) {
-                await joinGroup(group.id, true); // Silent auto-join
+                const joined = await joinGroup(group.id, true);
+                if (joined) {
+                    activeGroupIsMember = true;
+                }
             }
 
-            // Always show input area for direct access
-            DOM.inputArea.classList.remove('hidden');
-            document.getElementById('join-group-banner')?.remove();
-
-            // Load Chat History
-            await loadGroupMessages(group.id);
+            // Show input and load messages
+            if (activeGroupIsMember) {
+                DOM.inputArea.classList.remove('hidden');
+                await loadGroupMessages(group.id);
+            } else {
+                // Failed to join
+                DOM.inputArea.classList.add('hidden');
+                DOM.messagesContainer.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center">
+                        <div class="max-w-md text-center p-8 glass rounded-2xl">
+                            <i data-lucide="lock" class="w-16 h-16 text-gray-500 mx-auto mb-4"></i>
+                            <h3 class="text-xl font-bold text-white mb-2">Access Denied</h3>
+                            <p class="text-gray-400 mb-6">You don't have permission to join this group.</p>
+                        </div>
+                    </div>
+                `;
+                lucide.createIcons();
+            }
         }
 
         async function joinGroup(groupId, isSilent = false) {
             try {
                 const token = sessionStorage.getItem('token');
-                const userEmail = currentUser.email;
-                if (!userEmail) { alert("Error: User email missing from session."); return; }
 
-                const res = await fetch('/api/groups/add-member', {
+                const res = await fetch('/api/groups/join', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                    body: JSON.stringify({ group_id: groupId, email: userEmail })
+                    body: JSON.stringify({ group_id: groupId })
                 });
 
                 if (res.ok) {
-                    if (!isSilent) showToast('Success', 'Joined Channel');
+                    if (!isSilent) showToast('Success', 'Joined Group');
                     activeGroupIsMember = true;
                     DOM.inputArea.classList.remove('hidden');
-                    document.getElementById('join-group-banner')?.remove();
+                    return true;
                 } else {
                     const err = await res.json();
-                    // If already member, just ignore error in silent mode, otherwise show toast
                     if (!isSilent) showToast('Error', err.error || 'Failed to join', true);
+                    return false;
                 }
-            } catch (e) { console.error(e); }
+            } catch (e) {
+                console.error('Join group error:', e);
+                return false;
+            }
         }
 
         async function loadGroupMessages(groupId) {
@@ -850,7 +879,7 @@
             if (isEmpty && isEmpty.innerText.includes('No messages yet')) isEmpty.remove();
 
             const div = document.createElement('div');
-            div.className = `flex w-full mb-4 gap-3 animate-fade-in ${isMe ? 'justify-end' : 'justify-start'}`;
+            div.className = `flex w-full mb-4 gap-3 ${isMe ? 'justify-end' : 'justify-start'}`;
 
             // Content Rendering (File vs Text)
             let contentHtml = '';
@@ -909,13 +938,21 @@
             const text = DOM.chatInput.value.trim();
             if (!text || !activeGroupId) return;
 
-            socket.emit('send_group_message', {
-                sender_id: currentUser.id,
-                group_id: activeGroupId,
-                message: text
-            });
-
+            const token = sessionStorage.getItem('token');
             DOM.chatInput.value = '';
+
+            try {
+                await fetch('/api/groups/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ group_id: activeGroupId, message: text })
+                });
+                // Refresh messages
+                await loadGroupMessages(activeGroupId);
+            } catch (e) {
+                console.error('Send message error:', e);
+                showToast('Error', 'Failed to send message', true);
+            }
         }
 
         // --- HELPERS ---
