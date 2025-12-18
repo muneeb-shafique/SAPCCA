@@ -179,6 +179,21 @@ def get_messages(group_id):
     results = []
     for m in msgs:
         sender = User.query.get(m.sender_id)
+        
+        # Get reply-to message if exists
+        reply_data = None
+        if m.reply_to_id:
+            reply_msg = GroupMessage.query.get(m.reply_to_id)
+            if reply_msg:
+                reply_sender = User.query.get(reply_msg.sender_id)
+                reply_data = {
+                    "id": reply_msg.id,
+                    "text": reply_msg.text,
+                    "sender_name": reply_sender.display_name if reply_sender else "Unknown",
+                    "has_voice": bool(reply_msg.voice_data),
+                    "has_file": bool(reply_msg.file_data)
+                }
+        
         results.append({
             "id": m.id,
             "text": m.text,
@@ -188,7 +203,10 @@ def get_messages(group_id):
             "time": m.timestamp.isoformat(),
             "file_data": m.file_data,
             "file_name": m.file_name,
-            "file_type": m.file_type
+            "file_type": m.file_type,
+            "voice_data": m.voice_data,
+            "voice_duration": m.voice_duration,
+            "reply_to": reply_data
         })
 
     return jsonify({"messages": results}), 200
@@ -213,7 +231,10 @@ def send_message():
         text=text,
         file_data=data.get("file_data"),
         file_name=data.get("file_name"),
-        file_type=data.get("file_type")
+        file_type=data.get("file_type"),
+        voice_data=data.get("voice_data"),
+        voice_duration=data.get("voice_duration"),
+        reply_to_id=data.get("reply_to_id")
     )
     
     db.session.add(msg)
@@ -269,3 +290,21 @@ def remove_member(group_id, user_id):
     db.session.commit()
     return jsonify({"message": "Member removed"}), 200
 
+@groups_bp.delete("/messages/<int:message_id>")
+@jwt_required()
+def delete_group_message(message_id):
+    """Delete a group message (only sender can delete)"""
+    uid = int(get_jwt_identity())
+    
+    msg = GroupMessage.query.get(message_id)
+    if not msg:
+        return jsonify({"error": "Message not found"}), 404
+    
+    # Verify sender
+    if msg.sender_id != uid:
+        return jsonify({"error": "Unauthorized"}), 403
+    
+    db.session.delete(msg)
+    db.session.commit()
+    
+    return jsonify({"message": "Message deleted"}), 200

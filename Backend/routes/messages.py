@@ -45,7 +45,10 @@ def send_msg():
         file_data=file_data,
         file_name=file_name,
         file_type=file_type,
-        file_category=file_category
+        file_category=file_category,
+        voice_data=data.get("voice_data"),
+        voice_duration=data.get("voice_duration"),
+        reply_to_id=data.get("reply_to_id")
     )
     db.session.add(msg)
     db.session.commit()
@@ -81,11 +84,28 @@ def chat_history(friend_id):
                 "file_data": m.file_data,
                 "file_name": m.file_name,
                 "file_type": m.file_type,
-                "file_category": m.file_category
+                "file_category": m.file_category,
+                "voice_data": m.voice_data,
+                "voice_duration": m.voice_duration,
+                "reply_to": get_reply_data_dm(m.reply_to_id) if m.reply_to_id else None
             }
             for m in history
         ]
     }), 200
+
+def get_reply_data_dm(reply_to_id):
+    """Helper to get reply message data for DMs"""
+    reply_msg = Message.query.get(reply_to_id)
+    if not reply_msg:
+        return None
+    sender = User.query.filter_by(id=reply_msg.sender_id).first()
+    return {
+        "id": reply_msg.id,
+        "text": reply_msg.content,
+        "sender_name": sender.display_name if sender else "Unknown",
+        "has_voice": bool(reply_msg.voice_data),
+        "has_file": bool(reply_msg.file_data)
+    }
 
 @messages_bp.delete("/delete/<int:message_id>")
 @jwt_required()

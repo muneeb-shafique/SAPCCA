@@ -61,6 +61,11 @@ class GroupMessage(db.Model):
     file_name = db.Column(db.String(255), nullable=True)
     file_type = db.Column(db.String(50), nullable=True)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    # Voice message fields
+    voice_data = db.Column(db.Text, nullable=True)  # Base64 encoded audio
+    voice_duration = db.Column(db.Integer, nullable=True)  # Duration in seconds
+    # Reply/threading field
+    reply_to_id = db.Column(db.Integer, db.ForeignKey('group_message.id'), nullable=True)
 
 class SystemLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -86,6 +91,11 @@ class Message(db.Model):
     file_name = db.Column(db.String(255), nullable=True)  # Original filename
     file_type = db.Column(db.String(50), nullable=True)  # MIME type
     file_category = db.Column(db.String(20), nullable=True)  # document/photo/video/audio
+    # Voice message fields
+    voice_data = db.Column(db.Text, nullable=True)  # Base64 encoded audio
+    voice_duration = db.Column(db.Integer, nullable=True)  # Duration in seconds
+    # Reply/threading field
+    reply_to_id = db.Column(db.Integer, db.ForeignKey('message.id'), nullable=True)
 
 class Assignment(db.Model):
     """Represents an assignment created by faculty for a class"""
