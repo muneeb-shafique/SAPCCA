@@ -22,7 +22,7 @@ def create_app():
 
     with app.app_context():
         # Import models so SQLAlchemy knows what to create
-        from models import User, SystemLog, FriendRequest, Message, Group, GroupMember, GroupMessage, Class, ClassMember
+        from models import User, SystemLog, FriendRequest, Message, Group, GroupMember, GroupMessage, Class, ClassMember, Assignment, AssignmentSubmission
         db.create_all()
 
     # register routes
@@ -32,6 +32,7 @@ def create_app():
     from routes.profile import profile_bp
     from routes.groups import groups_bp
     from routes.classes import classes_bp
+    from routes.assignments import assignments_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(friends_bp, url_prefix="/api/friends")
@@ -39,6 +40,7 @@ def create_app():
     app.register_blueprint(profile_bp, url_prefix="/api/profile")
     app.register_blueprint(groups_bp, url_prefix="/api/groups")
     app.register_blueprint(classes_bp, url_prefix="/api/classes")
+    app.register_blueprint(assignments_bp, url_prefix="/api/assignments")
     
     from routes.admin import admin_bp
     app.register_blueprint(admin_bp, url_prefix="/api/admin")

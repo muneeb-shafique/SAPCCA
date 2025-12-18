@@ -86,3 +86,32 @@ class Message(db.Model):
     file_name = db.Column(db.String(255), nullable=True)  # Original filename
     file_type = db.Column(db.String(50), nullable=True)  # MIME type
     file_category = db.Column(db.String(20), nullable=True)  # document/photo/video/audio
+
+class Assignment(db.Model):
+    """Represents an assignment created by faculty for a class"""
+    id = db.Column(db.Integer, primary_key=True)
+    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    due_date = db.Column(db.DateTime, nullable=False)
+    total_points = db.Column(db.Integer, default=100)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    file_data = db.Column(db.Text, nullable=True)  # Optional assignment file
+    file_name = db.Column(db.String(200), nullable=True)
+    file_type = db.Column(db.String(100), nullable=True)
+
+class AssignmentSubmission(db.Model):
+    """Represents a student's submission for an assignment"""
+    id = db.Column(db.Integer, primary_key=True)
+    assignment_id = db.Column(db.Integer, db.ForeignKey('assignment.id'), nullable=False)
+    student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
+    file_data = db.Column(db.Text)  # Base64 encoded submission file
+    file_name = db.Column(db.String(200))
+    file_type = db.Column(db.String(100))
+    text_response = db.Column(db.Text)  # Text submission
+    grade = db.Column(db.Integer)  # Out of total_points
+    feedback = db.Column(db.Text)  # Teacher feedback
+    graded_at = db.Column(db.DateTime)
+    graded_by = db.Column(db.Integer, db.ForeignKey('user.id'))

@@ -285,6 +285,20 @@
                         <!-- Groups injected here -->
                     </div>
                 </div>
+
+                <!-- Assignments Section -->
+                <div class="mt-6">
+                    <div class="flex items-center justify-between px-2 mb-2">
+                        <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Assignments</h3>
+                        <button id="create-assignment-workspace-btn"
+                            class="hidden text-gray-500 hover:text-white transition-colors p-1 hover:bg-white/5 rounded">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <div id="workspace-assignments-list" class="space-y-1">
+                        <!-- Assignments injected here -->
+                    </div>
+                </div>
             </div>
 
             <!-- Footer / Members -->
@@ -453,6 +467,165 @@
         </div>
     </div>
 
+    <!-- Create Assignment Modal -->
+    <div id="create-assignment-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div
+            class="glass-card w-full max-w-xl p-8 rounded-2xl border border-white/10 shadow-2xl scale-95 transition-all duration-300">
+            <h3 class="text-2xl font-display font-bold text-white mb-6">Create Assignment</h3>
+            <form id="create-assignment-form" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-2">TITLE</label>
+                    <input type="text" id="assignment-title-input" required
+                        class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none"
+                        placeholder="e.g. Week 1 Lab Assignment">
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-2">DESCRIPTION</label>
+                    <textarea id="assignment-desc-input" rows="4"
+                        class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none"
+                        placeholder="Instructions and requirements..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-mono text-gray-400 mb-2">DUE DATE</label>
+                        <input type="datetime-local" id="assignment-due-input" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-mono text-gray-400 mb-2">TOTAL POINTS</label>
+                        <input type="number" id="assignment-points-input" value="100" min="1" required
+                            class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-mono text-gray-400 mb-2">ATTACHMENT (OPTIONAL)</label>
+                    <input type="file" id="assignment-file-input" class="hidden">
+                    <button type="button" onclick="document.getElementById('assignment-file-input').click()"
+                        class="w-full py-2 px-4 rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 flex items-center justify-center gap-2">
+                        <i data-lucide="paperclip" class="w-4 h-4"></i>
+                        <span id="assignment-file-label">Attach File</span>
+                    </button>
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeAssignmentModal()"
+                        class="flex-1 py-3 rounded-lg border border-white/10 text-gray-400 hover:text-white hover:bg-white/5 font-medium transition-all">Cancel</button>
+                    <button type="submit"
+                        class="flex-1 py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-500/20">
+                        Create Assignment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Assignment Detail/Submission Modal -->
+    <div id="assignment-detail-modal"
+        class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden opacity-0 transition-opacity duration-300 flex items-center justify-center p-4">
+        <div
+            class="glass-card w-full max-w-2xl p-8 rounded-2xl border border-white/10 shadow-2xl scale-95 transition-all duration-300 max-h-[90vh] overflow-y-auto custom-scrollbar">
+            <div class="flex items-start justify-between mb-6">
+                <div class="flex-1">
+                    <h3 id="assignment-detail-title" class="text-2xl font-display font-bold text-white mb-2">Assignment
+                        Title</h3>
+                    <div class="flex gap-4 text-sm text-gray-400">
+                        <span class="flex items-center gap-1">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span id="assignment-detail-due"></span>
+                        </span>
+                        <span class="flex items-center gap-1">
+                            <i data-lucide="award" class="w-4 h-4"></i>
+                            <span id="assignment-detail-points"></span> points
+                        </span>
+                    </div>
+                </div>
+                <button onclick="closeAssignmentDetailModal()" class="text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="space-y-6">
+                <div>
+                    <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Description</h4>
+                    <p id="assignment-detail-desc" class="text-gray-300 leading-relaxed"></p>
+                </div>
+
+                <div id="assignment-file-section" class="hidden">
+                    <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">Attached File</h4>
+                    <button onclick="downloadAssignmentFile()"
+                        class="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-all">
+                        <i data-lucide="file-text" class="w-5 h-5 text-indigo-400"></i>
+                        <span id="assignment-file-name" class="text-white font-medium"></span>
+                        <i data-lucide="download" class="w-4 h-4 ml-auto"></i>
+                    </button>
+                </div>
+
+                <!-- Submission Section (Students) -->
+                <div id="assignment-submission-section" class="hidden">
+                    <div class="border-t border-white/10 pt-6">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Your Submission</h4>
+
+                        <div id="existing-submission-view" class="hidden space-y-4">
+                            <div class="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                                <div class="flex items-center gap-2 text-green-400 mb-2">
+                                    <i data-lucide="check-circle" class="w-5 h-5"></i>
+                                    <span class="font-bold">Submitted</span>
+                                </div>
+                                <p class="text-sm text-gray-400">
+                                    Submitted on <span id="submission-time"></span>
+                                </p>
+                                <div id="submission-grade-display"
+                                    class="hidden mt-3 pt-3 border-t border-green-500/20">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-gray-400">Grade:</span>
+                                        <span class="text-2xl font-bold text-green-400">
+                                            <span id="submission-grade"></span>/<span
+                                                id="submission-total-points"></span>
+                                        </span>
+                                    </div>
+                                    <p id="submission-feedback" class="text-sm text-gray-400 mt-2 italic"></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="submit-assignment-form" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-mono text-gray-400 mb-2">TEXT RESPONSE
+                                    (OPTIONAL)</label>
+                                <textarea id="submission-text-input" rows="4"
+                                    class="w-full bg-[#050505] border border-white/10 rounded-lg p-3 text-white focus:border-indigo-500 focus:outline-none"
+                                    placeholder="Type your response here..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-mono text-gray-400 mb-2">FILE UPLOAD</label>
+                                <input type="file" id="submission-file-input" class="hidden" required>
+                                <button type="button" onclick="document.getElementById('submission-file-input').click()"
+                                    class="w-full py-3 px-4 rounded-lg border border-white/10 text-gray-400 hover:bg-white/5 flex items-center justify-center gap-2">
+                                    <i data-lucide="upload" class="w-5 h-5"></i>
+                                    <span id="submission-file-label">Choose File</span>
+                                </button>
+                            </div>
+                            <button type="submit"
+                                class="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg shadow-indigo-500/20">
+                                Submit Assignment
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Grading Section (Faculty) -->
+                <div id="assignment-grading-section" class="hidden">
+                    <div class="border-t border-white/10 pt-6">
+                        <h4 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4">Submissions</h4>
+                        <div id="submissions-list" class="space-y-2">
+                            <!-- Submissions will be injected here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification -->
     <div id="notification-toast"
         class="fixed bottom-8 right-8 z-50 transform translate-y-32 opacity-0 transition-all duration-300">
@@ -479,6 +652,9 @@
         let activeGroupIsMember = false;
         let socket = null;
         let currentClassMembers = [];
+        let assignments = [];
+        let currentAssignmentId = null;
+        let currentAssignmentData = null;
 
         // --- DOM ELEMENTS ---
         const DOM = {
@@ -509,6 +685,13 @@
             membersModal: document.getElementById('members-modal'),
             membersListContainer: document.getElementById('members-list-container'),
             addMemberInput: document.getElementById('add-member-input'),
+
+            // Assignments
+            assignmentsList: document.getElementById('workspace-assignments-list'),
+            createAssignmentBtn: document.getElementById('create-assignment-workspace-btn'),
+            createAssignmentModal: document.getElementById('create-assignment-modal'),
+            createAssignmentForm: document.getElementById('create-assignment-form'),
+            assignmentDetailModal: document.getElementById('assignment-detail-modal'),
 
             // Common
             toast: document.getElementById('notification-toast')
@@ -730,12 +913,20 @@
                 if (cls.is_moderator) {
                     DOM.createGroupBtn.classList.remove('hidden');
                     DOM.createGroupBtn.onclick = () => openCreateGroupModal(classId);
+
+                    // Show Create Assignment Button for faculty
+                    DOM.createAssignmentBtn.classList.remove('hidden');
+                    DOM.createAssignmentBtn.onclick = () => openAssignmentModal();
                 } else {
                     DOM.createGroupBtn.classList.add('hidden');
+                    DOM.createAssignmentBtn.classList.add('hidden');
                 }
 
                 // Render Groups
                 renderGroupsSidebar(groups);
+
+                // Load and render Assignments
+                await loadAssignments(classId);
 
                 // Reset Chat Area
                 DOM.chatHeaderName.textContent = 'Select a Group';
@@ -1138,6 +1329,387 @@
             document.getElementById('cancel-btn').onclick = () => {
                 document.getElementById('create-class-modal').classList.add('hidden');
             };
+        }
+
+        // ===== ASSIGNMENTS LOGIC =====
+
+        async function loadAssignments(classId) {
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch(`/api/assignments/class/${classId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (res.ok && data.assignments) {
+                    assignments = data.assignments;
+                    renderAssignments();
+                }
+            } catch (e) {
+                console.error('Load assignments error:', e);
+            }
+        }
+
+        function renderAssignments() {
+            DOM.assignmentsList.innerHTML = '';
+
+            if (assignments.length === 0) {
+                DOM.assignmentsList.innerHTML = '<div class="p-2 text-xs text-center text-gray-500 italic">No assignments yet</div>';
+                return;
+            }
+
+            assignments.forEach(assignment => {
+                const el = document.createElement('button');
+                el.className = 'w-full text-left px-3 py-2 rounded-lg hover:bg-white/5 transition-colors group';
+
+                const dueDate = new Date(assignment.due_date);
+                const now = new Date();
+                const isOverdue = dueDate < now && !assignment.submitted;
+                const daysUntilDue = Math.ceil((dueDate - now) / (1000 * 60 * 60 * 24));
+
+                let statusBadge = '';
+                if (assignment.grade !== null) {
+                    statusBadge = `<span class="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded font-mono">${assignment.grade}/${assignment.total_points}</span>`;
+                } else if (assignment.submitted) {
+                    statusBadge = '<span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">Submitted</span>';
+                } else if (isOverdue) {
+                    statusBadge = '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded font-mono">Overdue</span>';
+                } else if (daysUntilDue <= 1) {
+                    statusBadge = '<span class="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded font-mono">Due Soon</span>';
+                }
+
+                el.innerHTML = `
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 min-w-0">
+                            <div class="text-sm text-gray-300 font-medium group-hover:text-white truncate flex items-center gap-2">
+                                <i data-lucide="clipboard-list" class="w-4 h-4 text-indigo-400 flex-shrink-0"></i>
+                                ${assignment.title}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-1">Due: ${dueDate.toLocaleDateString()}</div>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                `;
+                el.onclick = () => openAssignmentDetail(assignment.id);
+                DOM.assignmentsList.appendChild(el);
+            });
+
+            lucide.createIcons();
+        }
+
+        function openAssignmentModal() {
+            DOM.createAssignmentModal.classList.remove('hidden', 'opacity-0');
+            DOM.createAssignmentModal.querySelector('.glass-card').classList.remove('scale-95');
+
+            // Reset form
+            DOM.createAssignmentForm.reset();
+            document.getElementById('assignment-file-label').textContent = 'Attach File';
+        }
+
+        window.closeAssignmentModal = function () {
+            DOM.createAssignmentModal.classList.add('opacity-0');
+            DOM.createAssignmentModal.querySelector('.glass-card').classList.add('scale-95');
+            setTimeout(() => DOM.createAssignmentModal.classList.add('hidden'), 300);
+        }
+
+        DOM.createAssignmentForm.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('assignment-title-input').value;
+            const description = document.getElementById('assignment-desc-input').value;
+            const dueDate = document.getElementById('assignment-due-input').value;
+            const totalPoints = parseInt(document.getElementById('assignment-points-input').value);
+            const fileInput = document.getElementById('assignment-file-input');
+
+            try {
+                const token = sessionStorage.getItem('token');
+                let fileData = null, fileName = null, fileType = null;
+
+                if (fileInput.files[0]) {
+                    const reader = new FileReader();
+                    const filePromise = new Promise((resolve) => {
+                        reader.onload = (ev) => {
+                            resolve({
+                                data: ev.target.result,
+                                name: fileInput.files[0].name,
+                                type: fileInput.files[0].type
+                            });
+                        };
+                    });
+                    reader.readAsDataURL(fileInput.files[0]);
+                    const fileInfo = await filePromise;
+                    fileData = fileInfo.data;
+                    fileName = fileInfo.name;
+                    fileType = fileInfo.type;
+                }
+
+                const res = await fetch('/api/assignments/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        class_id: activeClassId,
+                        title, description, due_date: dueDate, total_points: totalPoints,
+                        file_data: fileData, file_name: fileName, file_type: fileType
+                    })
+                });
+
+                if (res.ok) {
+                    closeAssignmentModal();
+                    await loadAssignments(activeClassId);
+                    showToast('Success', 'Assignment created');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error', 'Failed to create assignment', true);
+            }
+        };
+
+        // File input label update
+        document.getElementById('assignment-file-input').onchange = (e) => {
+            const label = document.getElementById('assignment-file-label');
+            if (e.target.files[0]) {
+                label.textContent = e.target.files[0].name;
+            }
+        };
+
+        async function openAssignmentDetail(assignmentId) {
+            try {
+                currentAssignmentId = assignmentId;
+                const token = sessionStorage.getItem('token');
+
+                // Get assignment details
+                const res = await fetch(`/api/assignments/${assignmentId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!res.ok) return;
+
+                currentAssignmentData = data;
+
+                // Populate modal
+                document.getElementById('assignment-detail-title').textContent = data.title;
+                document.getElementById('assignment-detail-desc').textContent = data.description || 'No description';
+                document.getElementById('assignment-detail-due').textContent = new Date(data.due_date).toLocaleString();
+                document.getElementById('assignment-detail-points').textContent = data.total_points;
+
+                // File section
+                if (data.file_data) {
+                    document.getElementById('assignment-file-section').classList.remove('hidden');
+                    document.getElementById('assignment-file-name').textContent = data.file_name;
+                } else {
+                    document.getElementById('assignment-file-section').classList.add('hidden');
+                }
+
+                // Check if faculty or student  
+                const isFaculty = ['faculty', 'teacher', 'professor', 'admin'].includes(currentUserRole.toLowerCase());
+
+                if (isFaculty) {
+                    // Faculty: Show grading section
+                    document.getElementById('assignment-submission-section').classList.add('hidden');
+                    document.getElementById('assignment-grading-section').classList.remove('hidden');
+                    await loadSubmissions(assignmentId);
+                } else {
+                    // Student: Show submission section
+                    document.getElementById('assignment-grading-section').classList.add('hidden');
+                    document.getElementById('assignment-submission-section').classList.remove('hidden');
+
+                    // Check if already submitted
+                    if (data.submission) {
+                        document.getElementById('existing-submission-view').classList.remove('hidden');
+                        document.getElementById('submit-assignment-form').classList.add('hidden');
+
+                        document.getElementById('submission-time').textContent = new Date(data.submission.submitted_at).toLocaleString();
+
+                        if (data.submission.grade !== null) {
+                            document.getElementById('submission-grade-display').classList.remove('hidden');
+                            document.getElementById('submission-grade').textContent = data.submission.grade;
+                            document.getElementById('submission-total-points').textContent = data.total_points;
+                            document.getElementById('submission-feedback').textContent = data.submission.feedback || 'No feedback yet';
+                        }
+                    } else {
+                        document.getElementById('existing-submission-view').classList.add('hidden');
+                        document.getElementById('submit-assignment-form').classList.remove('hidden');
+                    }
+                }
+
+                // Show modal
+                DOM.assignmentDetailModal.classList.remove('hidden', 'opacity-0');
+                DOM.assignmentDetailModal.querySelector('.glass-card').classList.remove('scale-95');
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error('Open assignment error:', e);
+            }
+        }
+
+        window.closeAssignmentDetailModal = function () {
+            DOM.assignmentDetailModal.classList.add('opacity-0');
+            DOM.assignmentDetailModal.querySelector('.glass-card').classList.add('scale-95');
+            setTimeout(() => DOM.assignmentDetailModal.classList.add('hidden'), 300);
+        }
+
+        window.downloadAssignmentFile = function () {
+            if (currentAssignmentData && currentAssignmentData.file_data) {
+                const link = document.createElement('a');
+                link.href = currentAssignmentData.file_data;
+                link.download = currentAssignmentData.file_name;
+                link.click();
+            }
+        }
+
+        document.getElementById('submit-assignment-form').onsubmit = async (e) => {
+            e.preventDefault();
+
+            const textResponse = document.getElementById('submission-text-input').value;
+            const fileInput = document.getElementById('submission-file-input');
+
+            if (!fileInput.files[0] && !textResponse) {
+                showToast('Error', 'Please provide either a file or text response');
+                return;
+            }
+
+            try {
+                const token = sessionStorage.getItem('token');
+                let fileData = null, fileName = null, fileType = null;
+
+                if (fileInput.files[0]) {
+                    const reader = new FileReader();
+                    const filePromise = new Promise((resolve) => {
+                        reader.onload = (ev) => {
+                            resolve({
+                                data: ev.target.result,
+                                name: fileInput.files[0].name,
+                                type: fileInput.files[0].type
+                            });
+                        };
+                    });
+                    reader.readAsDataURL(fileInput.files[0]);
+                    const fileInfo = await filePromise;
+                    fileData = fileInfo.data;
+                    fileName = fileInfo.name;
+                    fileType = fileInfo.type;
+                }
+
+                const res = await fetch(`/api/assignments/${currentAssignmentId}/submit`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({
+                        text_response: textResponse,
+                        file_data: fileData,
+                        file_name: fileName,
+                        file_type: fileType
+                    })
+                });
+
+                if (res.ok) {
+                    closeAssignmentDetailModal();
+                    await loadAssignments(activeClassId);
+                    showToast('Success', 'Assignment submitted!');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error', 'Submission failed', true);
+            }
+        };
+
+        document.getElementById('submission-file-input').onchange = (e) => {
+            const label = document.getElementById('submission-file-label');
+            if (e.target.files[0]) {
+                label.textContent = e.target.files[0].name;
+            }
+        };
+
+        async function loadSubmissions(assignmentId) {
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch(`/api/assignments/${assignmentId}/submissions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+
+                if (!res.ok) return;
+
+                const list = document.getElementById('submissions-list');
+                list.innerHTML = '';
+
+                if (data.submissions.length === 0) {
+                    list.innerHTML = '<p class="text-gray-500 text-sm">No submissions yet</p>';
+                    return;
+                }
+
+                data.submissions.forEach(sub => {
+                    const card = document.createElement('div');
+                    card.className = 'p-4 rounded-lg bg-white/5 border border-white/10';
+
+                    let statusBadge = '';
+                    if (sub.grade !== null) {
+                        statusBadge = `<span class="text-sm font-bold text-green-400">${sub.grade}/${currentAssignmentData.total_points}</span>`;
+                    } else if (sub.submitted) {
+                        statusBadge = sub.is_late ?
+                            '<span class="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">Late</span>' :
+                            '<span class="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">On Time</span>';
+                    } else {
+                        statusBadge = '<span class="text-xs text-gray-500">Not Submitted</span>';
+                    }
+
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
+                                <div class="font-medium text-white">${sub.student_name}</div>
+                                <div class="text-xs text-gray-500">${sub.student_email}</div>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                        ${sub.submitted ? `
+                            <div class="mt-3 pt-3 border-t border-white/10 space-y-2">
+                                <div class="text-xs text-gray-400">Submitted: ${new Date(sub.submission_time).toLocaleString()}</div>
+                                <div class="flex gap-2">
+                                    <input type="number" id="grade-${sub.student_id}" placeholder="Grade" min="0" max="${currentAssignmentData.total_points}"
+                                        value="${sub.grade || ''}"
+                                        class="flex-1 bg-[#050505] border border-white/10 rounded px-2 py-1 text-sm text-white">
+                                    <button onclick="gradeSubmission(${sub.student_id})"
+                                        class="px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded">
+                                        Grade
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    `;
+
+                    list.appendChild(card);
+                });
+
+            } catch (e) {
+                console.error('Load submissions error:', e);
+            }
+        }
+
+        window.gradeSubmission = async function (studentId) {
+            const gradeInput = document.getElementById(`grade-${studentId}`);
+            const grade = parseInt(gradeInput.value);
+
+            if (isNaN(grade) || grade < 0) {
+                showToast('Error', 'Please enter a valid grade');
+                return;
+            }
+
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch(`/api/assignments/${currentAssignmentId}/submissions/${studentId}/grade`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ grade, feedback: '' })
+                });
+
+                if (res.ok) {
+                    showToast('Success', 'Graded successfully');
+                    await loadSubmissions(currentAssignmentId);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error', 'Grading failed', true);
+            }
         }
 
         init();
