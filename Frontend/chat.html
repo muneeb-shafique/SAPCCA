@@ -1419,7 +1419,7 @@ faculty@example.com"></textarea>
             messages.forEach(msg => {
                 const isMe = msg.senderId == currentUserId;
                 const bubble = document.createElement('div');
-                bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in mb-4 gap-3`;
+                bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} mb-4 gap-3`;
 
                 // Avatar for Groups (Receive only)
                 const showAvatar = activeChatType === 'group' && !isMe;
