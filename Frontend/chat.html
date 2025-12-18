@@ -1035,6 +1035,11 @@ faculty@example.com"></textarea>
             createGroupInClassModal: document.getElementById('create-group-in-class-modal')
         };
         const DEFAULT_AVATAR = "https://robohash.org/default?set=set4&bgset=bg2";
+        const DEFAULT_MOCK_USERS = {
+            'SEC-001': { name: 'Dr. Sarah Connor', status: 'Active', role: 'Professor' },
+            'SEC-002': { name: 'John Doe', status: 'Away', role: 'Student' },
+            'SEC-003': { name: 'Alice Smith', status: 'DND', role: 'Faculty' }
+        };
 
         // Current User
         let currentUserId = 'SEC-' + crypto.randomUUID().substring(0, 4).toUpperCase();
@@ -1048,22 +1053,17 @@ faculty@example.com"></textarea>
         window.activeChatId = null; // Global sync
 
         // Data Stores
-        let mockChats = {}; // Local DMs
+        let friends = [];   // API Friends (for DMs)
         let groups = [];    // API Groups
         let classes = [];   // API Classes
         let activeClassId = null; // Currently viewing class
 
         // --- UTILS ---
-        const getAvatar = (id) => `https://robohash.org/${id}?set=set4&bgset=bg2`;
+        const getAvatar = (url) => url || "https://robohash.org/default?set=set4&bgset=bg2";
         const formatTime = (ts) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
         const isFaculty = () => {
             const roles = ['faculty', 'teacher', 'professor', 'admin'];
             return roles.includes(currentUserRole?.toLowerCase());
-        };
-        // DM Contact Helper
-        const getContact = (id) => {
-            if (id === currentUserId) return { name: currentUserName, status: currentUserStatus };
-            return DEFAULT_MOCK_USERS[id] || { name: id, status: 'Offline', role: 'Unknown' };
         };
 
         // --- STATE MANAGEMENT ---
@@ -1072,19 +1072,13 @@ faculty@example.com"></textarea>
                 // 1. Load User from Session (Real Auth)
                 const sessionUser = JSON.parse(sessionStorage.getItem('user'));
                 if (sessionUser) {
-                    currentUserId = sessionUser.id; // Usually integer for backend, but we handle string/int
+                    currentUserId = sessionUser.id;
                     currentUserName = sessionUser.name;
                     currentUserRole = sessionUser.role;
-                } else {
-                    // Fallback to local
-                    const u = JSON.parse(localStorage.getItem(STORAGE_KEYS.USER));
-                    if (u) { currentUserId = u.id; currentUserName = u.name; currentUserStatus = u.status; }
                 }
 
-                // 2. Load Local DMs
-                const c = JSON.parse(localStorage.getItem(STORAGE_KEYS.CHATS));
-                if (c) mockChats = c;
-                else mockChats = {};
+                // 2. Load Friends (for DMs)
+                await loadFriends();
 
                 // 3. Load Groups from API
                 await loadGroups();
@@ -1100,6 +1094,21 @@ faculty@example.com"></textarea>
                 }
 
             } catch (e) { console.error("Load Error", e); }
+        }
+
+        async function loadFriends() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) return;
+
+                const res = await fetch('/api/friends/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (res.ok) {
+                    friends = await res.json();
+                    console.log('[FRIENDS] Loaded', friends.length, 'friends');
+                } else {
+                    console.warn('[FRIENDS] Failed to load:', res.status);
+                }
+            } catch (e) { console.error('[FRIENDS] Error:', e); }
         }
 
         async function loadGroups() {
@@ -1192,30 +1201,29 @@ faculty@example.com"></textarea>
             const filter = DOM.searchInput.value.toLowerCase();
 
             // --- SECTION 1: GROUPS ---
-            const groupsHeader = document.createElement('div');
-            groupsHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-2";
-            groupsHeader.innerHTML = `<span>Group Channels</span>  <button id="trigger-create-group" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
-            DOM.chatListContainer.appendChild(groupsHeader);
-            // Re-attach listener immediately
-            groupsHeader.querySelector('#trigger-create-group').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createGroupModal, true); };
+            try {
+                const groupsHeader = document.createElement('div');
+                groupsHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-2";
+                groupsHeader.innerHTML = `<span>Group Channels</span>  <button id="trigger-create-group" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+                DOM.chatListContainer.appendChild(groupsHeader);
+                // Re-attach listener immediately
+                groupsHeader.querySelector('#trigger-create-group').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createGroupModal, true); };
 
-            if (groups.length === 0) {
-                const empty = document.createElement('div');
-                empty.className = "px-3 py-2 text-xs text-gray-600 italic";
-                empty.textContent = "No active channels";
-                DOM.chatListContainer.appendChild(empty);
-            } else {
-                groups.forEach(g => {
-                    if (filter && !g.name.toLowerCase().includes(filter)) return;
+                if (groups.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = "px-3 py-2 text-xs text-gray-600 italic";
+                    empty.textContent = "No active channels";
+                    DOM.chatListContainer.appendChild(empty);
+                } else {
+                    groups.forEach(g => {
+                        if (filter && !g.name.toLowerCase().includes(filter)) return;
 
-                    const isActive = (activeChatId == g.id && activeChatType === 'group');
-                    const el = document.createElement('div');
-                    el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
-                    el.onclick = () => openChat(g.id, 'group');
+                        const isActive = (activeChatId == g.id && activeChatType === 'group');
+                        const el = document.createElement('div');
+                        el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
+                        el.onclick = () => openChat(g.id, 'group');
 
-                    const seed = g.name.replace(/[^a-zA-Z0-9]/g, '');
-
-                    el.innerHTML = `
+                        el.innerHTML = `
                         <div class="relative flex-shrink-0">
                            <div class="w-12 h-12 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-400 font-bold border border-indigo-500/30 ring-2 ring-transparent ${isActive ? 'ring-indigo-500/50' : ''}">
                                 ${g.name.substring(0, 2).toUpperCase()}
@@ -1228,25 +1236,26 @@ faculty@example.com"></textarea>
                             <p class="text-xs text-gray-400 truncate">${g.description || 'Secure Channel'}</p>
                         </div>
                     `;
-                    DOM.chatListContainer.appendChild(el);
-                });
-            }
-            lucide.createIcons();
+                        DOM.chatListContainer.appendChild(el);
+                    });
+                }
+            } catch (e) { console.error("Error rendering groups:", e); }
 
             // --- SECTION 2: CLASSES (Faculty Only) ---
-            if (isFaculty() && classes.length > 0) {
-                const classesHeader = document.createElement('div');
-                classesHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
-                classesHeader.innerHTML = `<span>Classes</span> <button id="trigger-create-class" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
-                DOM.chatListContainer.appendChild(classesHeader);
-                classesHeader.querySelector('#trigger-create-class').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createClassModal, true); };
+            try {
+                if (isFaculty() && classes.length > 0) {
+                    const classesHeader = document.createElement('div');
+                    classesHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
+                    classesHeader.innerHTML = `<span>Classes</span> <button id="trigger-create-class" class="hover:text-white transition-colors"><i data-lucide="plus" class="w-3 h-3"></i></button>`;
+                    DOM.chatListContainer.appendChild(classesHeader);
+                    classesHeader.querySelector('#trigger-create-class').onclick = (e) => { e.stopPropagation(); toggleModal(DOM.createClassModal, true); };
 
-                classes.forEach(cls => {
-                    if (filter && !cls.name.toLowerCase().includes(filter)) return;
+                    classes.forEach(cls => {
+                        if (filter && !cls.name.toLowerCase().includes(filter)) return;
 
-                    const classEl = document.createElement('div');
-                    classEl.className = 'p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:bg-indigo-500/10 hover:border-indigo-500/30 flex items-center gap-3';
-                    classEl.innerHTML = `
+                        const classEl = document.createElement('div');
+                        classEl.className = 'p-3 rounded-xl cursor-pointer transition-all border border-transparent hover:bg-indigo-500/10 hover:border-indigo-500/30 flex items-center gap-3';
+                        classEl.innerHTML = `
                         <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
                             <i data-lucide="graduation-cap" class="w-5 h-5 text-white"></i>
                         </div>
@@ -1256,49 +1265,49 @@ faculty@example.com"></textarea>
                         </div>
                         ${cls.is_moderator ? '<span class="text-xs bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/30 font-mono">MOD</span>' : ''}
                     `;
-                    classEl.onclick = () => viewClassDetails(cls.id);
-                    DOM.chatListContainer.appendChild(classEl);
-                });
-                lucide.createIcons();
-            }
+                        classEl.onclick = () => viewClassDetails(cls.id);
+                        DOM.chatListContainer.appendChild(classEl);
+                    });
+                }
+            } catch (e) { console.error("Error rendering classes:", e); }
 
             // --- SECTION 3: DIRECT MESSAGES ---
-            const dmHeader = document.createElement('div');
-            dmHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
-            dmHeader.innerHTML = `<span>Direct Messages</span>`;
-            DOM.chatListContainer.appendChild(dmHeader);
+            try {
+                const dmHeader = document.createElement('div');
+                dmHeader.className = "flex items-center justify-between px-3 py-2 text-xs font-bold text-gray-500 uppercase tracking-wider mt-4";
+                dmHeader.innerHTML = `<span>Direct Messages</span>`;
+                DOM.chatListContainer.appendChild(dmHeader);
 
-            Object.keys(mockChats).forEach(chatId => {
-                const chat = mockChats[chatId];
-                const contact = getContact(chat.contactId);
-                if (filter && !contact.name.toLowerCase().includes(filter)) return;
+                if (friends.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = "px-3 py-2 text-xs text-gray-600 italic";
+                    empty.textContent = "No active contacts";
+                    DOM.chatListContainer.appendChild(empty);
+                } else {
+                    friends.forEach(friend => {
+                        if (filter && !friend.display_name.toLowerCase().includes(filter)) return;
 
-                const lastMsg = chat.messages[chat.messages.length - 1];
-                const msgPreview = lastMsg ? (lastMsg.senderId === currentUserId ? 'You: ' : '') + lastMsg.text : 'No Data';
-                const isActive = (activeChatId == chatId && activeChatType === 'dm');
+                        const isActive = (activeChatId == friend.id && activeChatType === 'dm');
+                        const el = document.createElement('div');
+                        el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
+                        el.onclick = () => openChat(friend.id, 'dm');
 
-                const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
-
-                const el = document.createElement('div');
-                el.className = `p-3 rounded-xl cursor-pointer transition-all border border-transparent flex items-center gap-3 group ${isActive ? 'bg-white/10 border-white/5' : 'hover:bg-white/5'}`;
-                el.onclick = () => openChat(chatId, 'dm');
-
-                el.innerHTML = `
-                <div class="relative flex-shrink-0">
-                    <img src="${getAvatar(chat.contactId)}" class="w-12 h-12 rounded-full bg-black object-cover ring-2 ring-white/5">
-                    <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#111317] ${statusColor}"></div>
-                </div>
-                <div class="flex-1 min-w-0">
-                    <div class="flex justify-between items-baseline mb-0.5">
-                        <h4 class="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">${contact.name}</h4>
-                        <span class="text-[10px] text-gray-500 font-mono">${lastMsg ? formatTime(lastMsg.timestamp) : ''}</span>
-                    </div>
-                    <p class="text-xs text-gray-400 truncate">${msgPreview}</p>
-                </div>
-                ${chat.unread > 0 ? `<div class="w-5 h-5 rounded-full bg-brand-500 text-white text-[10px] font-bold flex items-center justify-center shadow-lg shadow-brand-500/30">${chat.unread}</div>` : ''}
-            `;
-                DOM.chatListContainer.appendChild(el);
-            });
+                        el.innerHTML = `
+                        <div class="relative flex-shrink-0">
+                            <img src="${getAvatar(friend.avatar_url)}" class="w-12 h-12 rounded-full bg-black object-cover ring-2 ring-white/5">
+                            <div class="absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-[#111317] bg-emerald-500"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex justify-between items-baseline mb-0.5">
+                                <h4 class="text-sm font-bold text-white truncate group-hover:text-brand-400 transition-colors">${friend.display_name}</h4>
+                            </div>
+                            <p class="text-xs text-brand-400/70 truncate">Encrypted Channel</p>
+                        </div>
+                    `;
+                        DOM.chatListContainer.appendChild(el);
+                    });
+                }
+            } catch (e) { console.error("Error rendering DMs:", e); }
 
             lucide.createIcons();
         }
@@ -1315,32 +1324,41 @@ faculty@example.com"></textarea>
             DOM.chatWindowCol.classList.add('active'); // Mobile
 
             if (type === 'dm') {
-                const chat = mockChats[id];
-                chat.unread = 0;
-                saveState();
+                const friend = friends.find(f => f.id == id);
+                if (!friend) return; // Should not happen if clicked from list
 
-                const contact = getContact(chat.contactId);
-                DOM.chatTitle.textContent = contact.name;
-                DOM.chatIdDisplay.textContent = chat.contactId;
-                DOM.chatAvatar.src = getAvatar(chat.contactId);
+                DOM.chatTitle.textContent = friend.display_name;
+                DOM.chatIdDisplay.textContent = "ID: " + friend.id;
+                DOM.chatAvatar.src = getAvatar(friend.avatar_url);
 
-                // Show Status Dot
-                const statusColor = contact.status === 'Active' ? 'bg-emerald-500' : contact.status === 'Away' ? 'bg-amber-500' : contact.status === 'DND' ? 'bg-red-500' : 'bg-gray-500';
-                DOM.chatStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black ${statusColor}`;
+                // Show Status Dot (Assume Active for now)
+                DOM.chatStatusDot.className = `absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-black bg-emerald-500`;
                 DOM.chatStatusDot.classList.remove('hidden');
 
-                // Info Button -> DM Info
+                // Info Button -> Simple Info
                 document.getElementById('info-btn').onclick = () => {
-                    document.getElementById('modal-contact-name-info').textContent = contact.name;
-                    document.getElementById('modal-contact-id').textContent = chat.contactId;
-                    document.getElementById('modal-info-avatar').src = getAvatar(chat.contactId);
-                    document.getElementById('modal-contact-status').textContent = contact.status;
-                    document.getElementById('modal-contact-role').textContent = contact.role;
-                    toggleModal(DOM.channelInfoModal, true);
+                    showToast('Info', `${friend.display_name} (${friend.email})`);
                 };
 
-                // Render DM Messages
-                renderMessages(chat.messages);
+                // Fetch DM Messages
+                try {
+                    const token = sessionStorage.getItem('token');
+                    const res = await fetch(`/api/messages/chat/${id}`, { headers: { 'Authorization': `Bearer ${token}` } });
+                    const data = await res.json();
+
+                    if (data.messages) {
+                        const mappedMsgs = data.messages.map(m => ({
+                            senderId: m.from,
+                            text: m.text,
+                            timestamp: new Date(m.time).getTime(),
+                            fileData: m.file_data,
+                            fileName: m.file_name,
+                            fileType: m.file_type,
+                            fileCategory: m.file_type ? getCategoryFromType(m.file_type) : null
+                        }));
+                        renderMessages(mappedMsgs);
+                    }
+                } catch (e) { console.error("Error fetching DM messages", e); }
             } else {
                 // GROUP
                 const group = groups.find(g => g.id == id);
@@ -1399,8 +1417,6 @@ faculty@example.com"></textarea>
             DOM.messagesContainer.innerHTML = '';
 
             messages.forEach(msg => {
-                // For DM: senderId, currentUserId are strings. For Group: Integers.
-                // Weak compare == handles string vs int
                 const isMe = msg.senderId == currentUserId;
                 const bubble = document.createElement('div');
                 bubble.className = `flex w-full message-wrapper ${isMe ? 'justify-end' : 'justify-start'} animate-fade-in mb-4 gap-3`;
@@ -1472,28 +1488,25 @@ faculty@example.com"></textarea>
             // Reset Input
             DOM.msgInput.value = '';
 
-            if (activeChatType === 'dm') {
-                mockChats[activeChatId].messages.push({
-                    senderId: currentUserId,
-                    text: text,
-                    timestamp: Date.now()
-                });
-                saveState();
-                renderMessages(mockChats[activeChatId].messages);
-                renderChatList();
-            } else {
-                // GROUP SEND
-                try {
-                    const token = sessionStorage.getItem('token');
+            const token = sessionStorage.getItem('token');
+            try {
+                if (activeChatType === 'dm') {
+                    await fetch('/api/messages/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                        body: JSON.stringify({ receiver_id: activeChatId, message: text })
+                    });
+                } else {
+                    // GROUP SEND
                     await fetch('/api/groups/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                         body: JSON.stringify({ group_id: activeChatId, message: text })
                     });
-                    // Refresh view
-                    openChat(activeChatId, 'group');
-                } catch (e) { showToast("Error", "Failed to send to server"); }
-            }
+                }
+                // Refresh view immediately
+                openChat(activeChatId, activeChatType);
+            } catch (e) { showToast("Error", "Failed to send"); console.error(e); }
         }
 
         // --- FILE LOGIC (HYBRID) ---
@@ -1507,32 +1520,32 @@ faculty@example.com"></textarea>
 
                 if (file.size > 5 * 1024 * 1024) { showToast('Error', 'File > 5MB'); return; }
 
+                // CAPTURE STATE IMMEDIATELY - Critical fix for DM errors
+                // Fallback to window.activeChatId if local closure variable is lost
+                const currentChatId = activeChatId || window.activeChatId;
+                const currentChatType = activeChatType || ((activeChatId && groups.some(g => g.id == activeChatId)) ? 'group' : 'dm');
+
+                console.log('[FILE] Select Change - ID:', currentChatId, 'Type:', currentChatType, 'Global:', activeChatId, 'Window:', window.activeChatId);
+
+                // Check specifically for null/undefined to allow ID 0
+                if (currentChatId === null || currentChatId === undefined) {
+                    console.error('[FILE] Error: No active chat ID found. Dump:', { activeChatId, windowId: window.activeChatId });
+                    showToast('Error', 'No active chat selected (ID Lost)');
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.onload = async (ev) => {
                     const data = ev.target.result;
-                    // Send Logic
-                    if (activeChatType === 'dm') {
-                        mockChats[activeChatId].messages.push({
-                            senderId: currentUserId,
-                            text: '',
-                            timestamp: Date.now(),
-                            fileData: data,
-                            fileName: file.name,
-                            fileType: file.type,
-                            fileCategory: category
-                        });
-                        saveState();
-                        renderMessages(mockChats[activeChatId].messages);
-                        renderChatList();
-                    } else {
-                        // Group Logic
-                        try {
-                            const token = sessionStorage.getItem('token');
-                            await fetch('/api/groups/send', {
+                    const token = sessionStorage.getItem('token');
+
+                    try {
+                        if (currentChatType === 'dm') {
+                            await fetch('/api/messages/send', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                                 body: JSON.stringify({
-                                    group_id: activeChatId,
+                                    receiver_id: currentChatId,
                                     message: '',
                                     file_data: data,
                                     file_name: file.name,
@@ -1540,8 +1553,29 @@ faculty@example.com"></textarea>
                                     file_category: category
                                 })
                             });
-                            openChat(activeChatId, 'group');
-                        } catch (e) { showToast('Error', 'Upload Failed'); }
+                        } else {
+                            await fetch('/api/groups/send', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                                body: JSON.stringify({
+                                    group_id: currentChatId,
+                                    message: '',
+                                    file_data: data,
+                                    file_name: file.name,
+                                    file_type: file.type,
+                                    file_category: category
+                                })
+                            });
+                        }
+
+                        // Refresh view
+                        if (activeChatId == currentChatId) {
+                            openChat(currentChatId, currentChatType);
+                        }
+
+                    } catch (e) {
+                        console.error('[FILE] Upload Error:', e);
+                        showToast('Error', 'Upload failed');
                     }
                 };
                 reader.readAsDataURL(file);
@@ -1744,10 +1778,10 @@ faculty@example.com"></textarea>
             const backBtn = document.getElementById('back-to-list-btn'); // Needs ID in HTML (checked active-chat-interface)
             // ... Mobile logic specific to layout ...
 
-            // Poll for new messages if in group
+            // Poll for new messages (both groups and DMs)
             setInterval(() => {
-                if (activeChatId && activeChatType === 'group') {
-                    openChat(activeChatId, 'group'); // Refresh view (simple polling)
+                if (activeChatId && (activeChatType === 'group' || activeChatType === 'dm')) {
+                    openChat(activeChatId, activeChatType); // Refresh view (simple polling)
                 }
             }, 3000);
         };

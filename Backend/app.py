@@ -25,7 +25,6 @@ def create_app():
         from models import User, SystemLog, FriendRequest, Message, Group, GroupMember, GroupMessage, Class, ClassMember
         db.create_all()
 
-
     # register routes
     from routes.auth import auth_bp
     from routes.friends import friends_bp
