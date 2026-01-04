@@ -3,6 +3,11 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import User, Group, GroupMember, GroupMessage, ClassMember
 from database import db
 from datetime import datetime
+import sys
+import os
+import base64
+
+
 
 groups_bp = Blueprint("groups", __name__)
 
@@ -219,6 +224,33 @@ def send_message():
     
     group_id = data.get("group_id")
     text = data.get("message")
+    file_data = data.get("file_data")
+    file_type = data.get("file_type")
+    
+    # --- ML CONTENT MODERATION - REMOVED ---
+    # moderator.initialize() # Ensure models are loaded
+    
+    # Text Check
+    # if text:
+    #     is_safe, reason = moderator.check_text(text)
+    #     if not is_safe:
+    #         return jsonify({"error": reason}), 400
+
+    # Image Check
+    # if file_data and file_type and ("image" in file_type):
+    #     try:
+    #         if "," in file_data:
+    #             _, encoded = file_data.split(",", 1)
+    #         else:
+    #             encoded = file_data
+    #         image_bytes = base64.b64decode(encoded)
+    #         
+    #         is_safe, reason = moderator.check_image(image_bytes)
+    #         if not is_safe:
+    #             return jsonify({"error": reason}), 400
+    #     except Exception as e:
+    #         print(f"Group Image Mod Error: {e}")
+    # -----------------------------
     
     # Check membership
     membership = GroupMember.query.filter_by(group_id=group_id, user_id=uid).first()

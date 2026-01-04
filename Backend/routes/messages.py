@@ -2,6 +2,11 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from models import Message, User
 from database import db
+import sys
+import os
+import base64
+
+
 
 
 
@@ -37,6 +42,32 @@ def send_msg():
         # 5MB * 1.33 = ~6.65MB base64
         if len(file_data) > 6_650_000:
             return jsonify({"error": "File too large. Maximum size is 5MB"}), 400
+
+    # --- ML CONTENT MODERATION - REMOVED ---
+    # moderator.initialize() # Ensure models are loaded
+    
+    # Text Check
+    # if message_content:
+    #     is_safe, reason = moderator.check_text(message_content)
+    #     if not is_safe:
+    #         return jsonify({"error": reason}), 400
+
+    # Image Check
+    # if file_data and file_type and  ("image" in file_type):
+    #     try:
+    #         if "," in file_data:
+    #             _, encoded = file_data.split(",", 1)
+    #         else:
+    #             encoded = file_data
+    #         image_bytes = base64.b64decode(encoded)
+    #         
+    #         is_safe, reason = moderator.check_image(image_bytes)
+    #         if not is_safe:
+    #             return jsonify({"error": reason}), 400
+    #     except Exception as e:
+    #         print(f"DM Image Mod Error: {e}")
+    #         # Fail open or closed? Proceed if error to avoid blocking valid
+    # -----------------------------
 
     msg = Message(
         sender_id=uid,

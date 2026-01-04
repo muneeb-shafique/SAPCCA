@@ -538,23 +538,23 @@
                 <div class="glass-card p-6 rounded-xl">
                     <h3 class="text-xl font-display font-semibold mb-6">Quick Command Access</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <button
+                        <button onclick="enrollStudentAction()"
                             class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-brand-500/10 border border-white/5 hover:border-brand-500/20 transition-all group">
                             <i data-lucide="user-plus" class="w-6 h-6 text-brand-400 group-hover:text-brand-300"></i>
                             <span class="mt-2 text-sm font-medium text-white">Enroll Student</span>
                         </button>
-                        <button
+                        <button onclick="generateReportAction()"
                             class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-accent-500/10 border border-white/5 hover:border-accent-500/20 transition-all group">
                             <i data-lucide="file-text" class="w-6 h-6 text-accent-400 group-hover:text-accent-300"></i>
                             <span class="mt-2 text-sm font-medium text-white">Generate Report</span>
                         </button>
-                        <button
+                        <button onclick="broadcastAlertAction()"
                             class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-warning-500/10 border border-white/5 hover:border-warning-500/20 transition-all group">
                             <i data-lucide="alert-triangle"
                                 class="w-6 h-6 text-warning-400 group-hover:text-warning-300"></i>
                             <span class="mt-2 text-sm font-medium text-white">Broadcast Alert</span>
                         </button>
-                        <button
+                        <button onclick="revokeAccessAction()"
                             class="flex flex-col items-center justify-center p-6 rounded-xl bg-white/5 hover:bg-red-500/10 border border-white/5 hover:border-red-500/20 transition-all group">
                             <i data-lucide="lock" class="w-6 h-6 text-danger-400 group-hover:text-danger-300"></i>
                             <span class="mt-2 text-sm font-medium text-white">Revoke Access</span>
@@ -657,77 +657,441 @@
 
             <!-- Bottom pattern -->
             <div
-                class="h-2 w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMxMTEzMTciLz48Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0iMSIgZmlsbD0icmdiYSgyNTUsIDY1LCA2NSwgMC4xKSIvPjwvc3ZnPg==')] opacity-50">
+                class="h-2 w-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPjxyZWN0IHdpZHRoPSI0IiBoZWlnaHQ9IjQiIGZpbGw9IiMxMTEzMTciLz48Y2lyY2xlIGN4PSIyIiBjeT0iMiIgcj0xIiBmaWxsPSJyZ2JhKDI1NSwgNjUsIDY1LCAwLjEpIi8+PC9zdmc+')] opacity-50">
             </div>
         </div>
     </div>
 
+    <!-- Dynamic Action Modal -->
+    <div id="action-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" id="action-modal-backdrop"></div>
+        <div id="action-modal-card"
+            class="relative glass-card w-full max-w-md p-6 rounded-2xl transform transition-all scale-95 opacity-0">
+            <h3 id="action-modal-title" class="text-xl font-display font-bold text-white mb-2">Action Required</h3>
+            <p id="action-modal-desc" class="text-sm text-gray-400 mb-6">Please enter the details below.</p>
+
+            <div id="action-modal-inputs" class="space-y-4 mb-6">
+                <!-- Inputs injected here -->
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button id="action-modal-cancel"
+                    class="px-4 py-2 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-colors">Cancel</button>
+                <button id="action-modal-confirm"
+                    class="px-4 py-2 rounded-lg text-sm font-medium text-white bg-brand-600 hover:bg-brand-500 shadow-lg shadow-brand-500/20 transition-all">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success/Error Toast (Simple implementation) -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
     <script>
         lucide.createIcons();
 
-        // --- Auth & Visibility Handling ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const authStatus = window.getAuthStatus();
-            const sidebar = document.getElementById('sidebar-panel');
-            const main = document.getElementById('main-panel');
-            const modal = document.getElementById('access-denied-modal');
-            const modalCard = document.getElementById('modal-card');
+        // --- Custom UI Helpers ---
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            const colorClass = type === 'success' ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-red-500/20 bg-red-500/10 text-red-400';
 
-            if (authStatus === 'authorized') {
-                // Determine if we should show based on screen size (lg:flex vs hidden) logic is handled by classes
-                // We just need to remove the 'auth-protected' override
-                if (sidebar) sidebar.classList.remove('auth-protected');
-                if (main) main.classList.remove('auth-protected');
-            } else if (authStatus === 'unauthorized') {
-                const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
-                console.warn('Access Denied. Current Role:', userData.role);
+            toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl border ${colorClass} backdrop-blur-md shadow-lg transform transition-all translate-y-10 opacity-0`;
+            toast.innerHTML = `
+                <i data-lucide="${type === 'success' ? 'check-circle' : 'alert-circle'}" class="w-5 h-5"></i>
+                <span class="text-sm font-medium">${message}</span>
+            `;
 
-                // Update modal text to show why
-                const modalText = document.querySelector('#access-denied-modal p');
-                if (modalText) modalText.innerHTML += `<br><br><span class="text-xs text-red-400 font-mono bg-red-500/10 px-2 py-1 rounded">Debug: Identity '${userData.role || 'Unknown'}' is not authorized.</span>`;
+            container.appendChild(toast);
+            lucide.createIcons({ root: toast });
 
-                // Show Access Denied Modal
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-10', 'opacity-0');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function openActionModal(title, desc, fields) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('action-modal');
+                const card = document.getElementById('action-modal-card');
+                const titleEl = document.getElementById('action-modal-title');
+                const descEl = document.getElementById('action-modal-desc');
+                const inputsContainer = document.getElementById('action-modal-inputs');
+                const cancelBtn = document.getElementById('action-modal-cancel');
+                const confirmBtn = document.getElementById('action-modal-confirm');
+
+                // Reset
+                titleEl.textContent = title;
+                descEl.textContent = desc;
+                inputsContainer.innerHTML = '';
+
+                // Generate Fields
+                fields.forEach(f => {
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = `
+                        <label class="block text-xs font-mono text-gray-500 mb-1.5 ml-1 uppercase">${f.label}</label>
+                        <input type="${f.type || 'text'}" id="input-${f.key}" placeholder="${f.placeholder || ''}" 
+                            class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-brand-500/50 transition-colors code-font">
+                    `;
+                    inputsContainer.appendChild(wrapper);
+                });
+
+                // Show
                 modal.classList.remove('hidden');
                 modal.classList.add('flex');
-
-                // Small delay for animation
                 setTimeout(() => {
-                    modalCard.classList.remove('scale-95', 'opacity-0');
-                    modalCard.classList.add('scale-100', 'opacity-100');
+                    card.classList.remove('scale-95', 'opacity-0');
+                    card.classList.add('scale-100', 'opacity-100');
                 }, 10);
-            }
-            // 'no_session' is handled by the head script redirect
-        });
 
-        // Function to calculate bar heights dynamically (for better visual effect)
-        function setBarHeights() {
-            const bars = document.querySelectorAll('.bar');
-            const maxHeight = 256; // Max height in pixels for the container (h-64)
+                // Handlers
+                const close = () => {
+                    card.classList.remove('scale-100', 'opacity-100');
+                    card.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modal.classList.remove('flex');
+                        modal.classList.add('hidden');
+                    }, 200);
+                    resolve(null);
+                };
 
-            bars.forEach(bar => {
-                const percentage = parseInt(bar.dataset.height);
-                const heightPx = (percentage / 100) * maxHeight;
-                bar.style.height = `${heightPx}px`;
+                const submit = () => {
+                    const values = {};
+                    let allValid = true;
+                    fields.forEach(f => {
+                        const val = document.getElementById(`input-${f.key}`).value;
+                        if (f.required && !val) allValid = false;
+                        values[f.key] = val;
+                    });
+
+                    if (!allValid) {
+                        showToast('Please fill all required fields', 'error');
+                        return;
+                    }
+
+                    card.classList.remove('scale-100', 'opacity-100');
+                    card.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modal.classList.remove('flex');
+                        modal.classList.add('hidden');
+                    }, 200);
+                    resolve(values);
+                };
+
+                // Remove old listeners to prevent stacking (simple clone method)
+                const newCancel = cancelBtn.cloneNode(true);
+                const newConfirm = confirmBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+                confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+
+                newCancel.addEventListener('click', close);
+                newConfirm.addEventListener('click', submit);
             });
         }
 
-        window.onload = setBarHeights;
+        // --- Auth & Visibility Handling --- (Existing...)
+        document.addEventListener('DOMContentLoaded', () => {
+            const authStatus = window.getAuthStatus();
+            if (authStatus === 'authorized') {
+                document.getElementById('sidebar-panel')?.classList.remove('auth-protected');
+                document.getElementById('main-panel')?.classList.remove('auth-protected');
+                loadDashboardStats();
+            } else if (authStatus === 'unauthorized') {
+                document.getElementById('access-denied-modal').classList.remove('hidden');
+                document.getElementById('access-denied-modal').classList.add('flex');
+                setTimeout(() => {
+                    const card = document.getElementById('modal-card');
+                    card.classList.remove('scale-95', 'opacity-0');
+                    card.classList.add('scale-100', 'opacity-100');
+                }, 10);
+            }
+        });
+
+        async function loadDashboardStats() {
+            try {
+                const token = sessionStorage.getItem('token');
+                if (!token) return;
+
+                const res = await fetch('/api/classes/dashboard-stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) throw new Error("Failed to load stats");
+                const data = await res.json();
+
+                // 1. Update Metrics
+                const metrics = data.metrics || {};
+                updateMetric('Active Classes', metrics.active_classes);
+                updateMetric('Enrolled Students', metrics.enrolled_students);
+                updateMetric('Pending Requests', metrics.pending_requests);
+                updateMetric1('System Health', metrics.system_health); // Different helper for text
+
+                // 2. Update Graphs
+                const graphs = data.graphs || {};
+                const chartContainer = document.querySelector('.lg\\:col-span-2.glass-card .h-64'); // Selector for chart area
+
+                if (graphs.avg_assignment_score) {
+                    chartContainer.innerHTML = `
+                        <div class="w-full h-full flex flex-col items-center justify-center">
+                            <img src="data:image/png;base64,${graphs.avg_assignment_score}" class="max-h-full rounded shadow-lg" alt="Class Performance">
+                        </div>`;
+                } else {
+                    chartContainer.innerHTML = `<div class="w-full h-full flex items-center justify-center text-gray-500">No performance data yet</div>`;
+                }
+
+                // Append Top Students if available (maybe in a modal or replace another panel section?)
+                // For now, let's just make sure the main graph works.
+
+                // 3. Update Alerts
+                const alertsContainer = document.querySelector('.space-y-4.custom-scrollbar'); // The alerts list
+                if (data.alerts && data.alerts.length > 0) {
+                    alertsContainer.innerHTML = data.alerts.map(a => `
+                        <div class="flex gap-4 p-3 rounded-lg bg-white/5 border border-white/5">
+                            <i data-lucide="${getAlertIcon(a.level)}" class="w-5 h-5 ${getAlertColor(a.level)} flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <p class="text-sm font-medium text-white">${a.level}</p>
+                                <p class="text-xs text-gray-400">${a.message}</p>
+                                <span class="text-[10px] text-gray-600 font-mono mt-1 block">${a.timestamp}</span>
+                            </div>
+                        </div>
+                     `).join('');
+                }
+
+                // 4. Update Activity Feed
+                const feedPanel = Array.from(document.querySelectorAll('h3')).find(h => h.innerText === 'Live Activity Feed');
+                if (feedPanel) {
+                    const feedList = feedPanel.nextElementSibling;
+                    if (data.activity_feed && data.activity_feed.length > 0) {
+                        feedList.innerHTML = data.activity_feed.map(item => `
+                            <div class="flex items-center gap-3">
+                                <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse flex-shrink-0"></div>
+                                <p class="text-sm font-mono text-gray-300 truncate">
+                                    <span class="text-brand-400">${item.time}</span> ${item.text}
+                                </p>
+                            </div>
+                         `).join('');
+                    } else {
+                        feedList.innerHTML = '<div class="text-gray-500 text-sm text-center py-4">No recent activity</div>';
+                    }
+                }
+
+                lucide.createIcons();
+
+            } catch (e) {
+                console.error("Dashboard Load Error", e);
+            }
+        }
+
+        // Helpers
+        function updateMetric(label, value) {
+            // Find the card container by label text
+            const labelEl = Array.from(document.querySelectorAll('p.text-sm.text-gray-400')).find(el => el.innerText.includes(label));
+            if (labelEl) {
+                const valueEl = labelEl.parentElement.nextElementSibling; // The H1/p with value
+                if (valueEl) valueEl.innerText = value || 0;
+            }
+        }
+        function updateMetric1(label, value) {
+            const labelEl = Array.from(document.querySelectorAll('p.text-sm.text-gray-400')).find(el => el.innerText.includes(label));
+            if (labelEl) {
+                const valueEl = labelEl.parentElement.nextElementSibling;
+                if (valueEl) valueEl.innerHTML = `${value} <span class="text-xs text-brand-500"></span>`; // handling the specialized structure if any
+            }
+        }
+
+        function getAlertIcon(level) {
+            if (level === 'ERROR') return 'alert-circle';
+            if (level === 'WARNING') return 'alert-triangle';
+            return 'info';
+        }
+
+        function getAlertColor(level) {
+            if (level === 'ERROR') return 'text-red-400';
+            if (level === 'WARNING') return 'text-yellow-400';
+            return 'text-blue-400';
+        }
 
         // --- Mobile Menu Logic ---
         const mobileBtn = document.getElementById('mobile-menu-btn');
-        const sidebar = document.querySelector('aside');
+        const sideNav = document.querySelector('aside');
         const backdrop = document.getElementById('mobile-backdrop');
 
-        if (mobileBtn && sidebar && backdrop) {
+        if (mobileBtn && sideNav && backdrop) {
             mobileBtn.addEventListener('click', () => {
-                sidebar.classList.add('mobile-menu-open');
+                sideNav.classList.add('mobile-menu-open');
                 backdrop.classList.add('active');
             });
 
             backdrop.addEventListener('click', () => {
-                sidebar.classList.remove('mobile-menu-open');
+                sideNav.classList.remove('mobile-menu-open');
                 backdrop.classList.remove('active');
             });
+        }
+
+        // --- Module Directory Logic ---
+        async function loadModuleDirectory() {
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/classes/list', { headers: { 'Authorization': `Bearer ${token}` } });
+                if (!res.ok) return;
+                const data = await res.json();
+
+                const tbody = document.querySelector('tbody');
+                if (data.classes && data.classes.length > 0) {
+                    tbody.innerHTML = data.classes.map(c => `
+                        <tr class="hover:bg-white/5 transition-colors">
+                            <td class="py-4 px-4 font-mono text-brand-400">${c.name}</td>
+                            <td class="py-4 px-4 font-medium text-white">${c.description || 'No Description'}</td>
+                            <td class="py-4 px-4 text-gray-300">${c.member_count}</td>
+                            <td class="py-4 px-4">
+                                <span class="text-brand-400 text-sm font-semibold">--</span>
+                            </td>
+                            <td class="py-4 px-4">
+                                <span class="px-2 py-1 text-xs rounded-full bg-emerald-500/10 text-emerald-400">Active</span>
+                            </td>
+                            <td class="py-4 px-4 text-right">
+                                <button onclick="window.location.href='classes.html'" class="text-gray-400 hover:text-brand-400 p-1 rounded-md"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                                <button onclick="generateReportAction(${c.id})" title="Download Report" class="text-gray-400 hover:text-accent-400 p-1 rounded-md"><i data-lucide="file-down" class="w-4 h-4"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+                    lucide.createIcons();
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No classes found</td></tr>';
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Load table on init
+        document.addEventListener('DOMContentLoaded', loadModuleDirectory);
+
+        // --- Quick Actions Logic (Refactored) ---
+        async function enrollStudentAction() {
+            const data = await openActionModal(
+                "Enroll New Student",
+                "Add a student to your class roster.",
+                [
+                    { key: 'class_code', label: 'Class Name or Code', placeholder: 'e.g. CS-201', required: true },
+                    { key: 'student_id', label: 'Student ID / Email', placeholder: 'ID or user@example.com', required: true }
+                ]
+            );
+
+            if (!data) return;
+
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/classes/enroll-student', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(data)
+                });
+                const d = await res.json();
+
+                if (res.ok) {
+                    showToast(d.message);
+                    loadModuleDirectory();
+                    loadDashboardStats();
+                } else {
+                    showToast(d.error || "Enrollment failed", 'error');
+                }
+            } catch (e) { showToast("Network Error", 'error'); }
+        }
+
+        async function generateReportAction(classId = null) {
+            let targetId = classId;
+            if (!targetId) {
+                const data = await openActionModal(
+                    "Generate Class Report",
+                    "Download a detailed PDF report.",
+                    [{ key: 'class_id', label: 'Class ID', placeholder: 'Enter system ID...', required: true }]
+                );
+                if (!data) return;
+                targetId = data.class_id;
+            }
+
+            try {
+                showToast("Generating report...", "success"); // Info toast really
+                const token = sessionStorage.getItem('token');
+
+                const res = await fetch(`/api/classes/generate-report/${targetId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed');
+                }
+
+                const blob = await res.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `Class_Report_${targetId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                showToast("Report downloaded!");
+
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+
+        async function broadcastAlertAction() {
+            const data = await openActionModal(
+                "Broadcast System Alert",
+                "Send a high-priority notification to system logs.",
+                [{ key: 'message', label: 'Alert Message', placeholder: 'e.g. Server maintenance at midnight', required: true }]
+            );
+            if (!data) return;
+
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/classes/broadcast-alert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ message: data.message, level: 'WARNING' })
+                });
+                if (res.ok) {
+                    showToast('Alert broadcasted successfully');
+                    loadDashboardStats();
+                } else showToast("Failed to broadcast", 'error');
+            } catch (e) { showToast("Network Error", 'error'); }
+        }
+
+        async function revokeAccessAction() {
+            const data = await openActionModal(
+                "Revoke Student Access",
+                "Remove a student from a class permanently.",
+                [
+                    { key: 'class_code', label: 'Class Name / Code', placeholder: 'e.g. CS-201', required: true },
+                    { key: 'student_id', label: 'Student User ID', placeholder: 'Numeric ID', required: true }
+                ]
+            );
+            if (!data) return;
+
+            // Re-confirm for destructive action? Maybe a second modal or just explicit text above.
+            // For now, modal is explicit enough.
+
+            try {
+                const token = sessionStorage.getItem('token');
+                const res = await fetch('/api/classes/revoke-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(data)
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    showToast(d.message);
+                    loadModuleDirectory();
+                    loadDashboardStats();
+                } else showToast(d.error || "Failed", 'error');
+            } catch (e) { showToast("Network Error", 'error'); }
         }
     </script>
     <script src="js/integration.js"></script>

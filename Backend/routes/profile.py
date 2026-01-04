@@ -5,7 +5,7 @@ from database import db
 
 profile_bp = Blueprint("profile", __name__)
 
-@profile_bp.get("/")
+@profile_bp.get("")
 @jwt_required()
 def profile():
     uid = int(get_jwt_identity())

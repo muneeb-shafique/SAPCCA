@@ -190,7 +190,18 @@
                 </div>
 
                 <div class="mt-auto px-6 border-t border-white/10 pt-6">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">System Utilities</h3>
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Analytics</h3>
+                    <button onclick="loadAnalytics()"
+                        class="w-full text-left px-4 py-3 mb-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-300 hover:text-white transition-all flex items-center gap-3 group">
+                        <div
+                            class="p-1.5 rounded-lg bg-purple-500/20 text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-colors">
+                            <i data-lucide="bar-chart-2" class="w-4 h-4"></i>
+                        </div>
+                        <span class="font-medium">Performance Graphs</span>
+                    </button>
+
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 mt-6">System Utilities
+                    </h3>
                     <button onclick="loadLogs()"
                         class="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 text-gray-300 hover:text-white transition-all flex items-center gap-3 group">
                         <div
@@ -538,6 +549,57 @@
                 lucide.createIcons();
             } catch (e) {
                 content.innerHTML = `<p class="text-red-500 p-8 text-center">Log error: ${e.message}</p>`;
+            }
+        }
+
+        async function loadAnalytics() {
+            currentTable = 'Analytics';
+            document.getElementById('current-view-title').innerHTML = `<i data-lucide="bar-chart-2" class="w-6 h-6 text-purple-400"></i> Performance Analytics`;
+            document.getElementById('btn-create').classList.add('hidden');
+
+            const content = document.getElementById('content-area');
+            content.innerHTML = '<div class="flex justify-center pt-20"><i data-lucide="loader-2" class="w-10 h-10 animate-spin text-brand-500"></i></div>';
+            lucide.createIcons();
+
+            try {
+                const res = await fetch(`${API_BASE}/graphs/performance`, { headers: getHeaders() });
+                if (!res.ok) throw new Error('Failed to fetch graphs');
+
+                const graphs = await res.json();
+
+                if (Object.keys(graphs).length === 0) {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-64 text-gray-500 gap-3">
+                            <i data-lucide="bar-chart" class="w-12 h-12 text-purple-500/20"></i>
+                            <p>No data available for analytics yet.</p>
+                        </div>`;
+                    lucide.createIcons();
+                    return;
+                }
+
+                let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">';
+                if (graphs.avg_assignment_score) {
+                    html += `
+                        <div class="glass-panel p-6 rounded-2xl flex flex-col">
+                            <h3 class="text-lg font-bold mb-4 text-purple-300">Assignment Performance</h3>
+                            <img src="data:image/png;base64,${graphs.avg_assignment_score}" class="rounded-lg shadow-lg w-full h-auto" alt="Avg Score Graph">
+                        </div>`;
+                }
+                if (graphs.top_students) {
+                    html += `
+                        <div class="glass-panel p-6 rounded-2xl flex flex-col">
+                            <h3 class="text-lg font-bold mb-4 text-emerald-300">Top Performing Students</h3>
+                            <div class="mb-2 text-xs text-gray-400 font-mono">* Sorted using DSA Merge Sort</div>
+                            <img src="data:image/png;base64,${graphs.top_students}" class="rounded-lg shadow-lg w-full h-auto" alt="Top Students Graph">
+                        </div>`;
+                }
+                html += '</div>';
+
+                content.innerHTML = html;
+                lucide.createIcons();
+
+            } catch (e) {
+                content.innerHTML = `<p class="text-red-500 p-8 text-center">Analytics error: ${e.message}</p>`;
             }
         }
 

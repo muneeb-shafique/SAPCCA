@@ -593,39 +593,7 @@
             }, 50);
         }
 
-        // Custom Toast Notification System
-        function showToast(title, message, isError = false) {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-
-            const color = isError ? 'red' : 'brand';
-            const icon = isError ? 'x-circle' : 'check-circle';
-
-            toast.className = `glass-panel p-4 rounded-xl border-l-4 border-${color}-500 shadow-2xl flex items-start gap-3 w-80 transform translate-x-full transition-all duration-500`;
-            toast.innerHTML = `
-                <div class="bg-${color}-500/20 p-2 rounded-full text-${color}-400">
-                    <i data-lucide="${icon}" class="w-5 h-5"></i>
-                </div>
-                <div>
-                    <h4 class="font-bold text-white text-sm">${title}</h4>
-                    <p class="text-xs text-gray-400 mt-1">${message}</p>
-                </div>
-            `;
-
-            container.appendChild(toast);
-            lucide.createIcons();
-
-            // Animate In
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-x-full');
-            });
-
-            // Remove
-            setTimeout(() => {
-                toast.classList.add('translate-x-full', 'opacity-0');
-                setTimeout(() => toast.remove(), 500);
-            }, 4000);
-        }
+        // Note: showToast is now provided by shared-ui.js
 
         // Global variable to store email for OTP verification
         let currentEmail = '';
@@ -633,29 +601,41 @@
         // Login Handler (Real API)
         async function handleLogin(e) {
             e.preventDefault();
+            console.log('🔐 Login attempt started');
+
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-pass').value;
             const btn = e.target.querySelector('button[type="submit"]');
 
+            if (!btn) {
+                console.error('❌ Submit button not found');
+                return;
+            }
+
             const originalText = btn.innerHTML;
+            btn.disabled = true;
             btn.innerHTML = `<i data-lucide="loader-2" class="animate-spin w-5 h-5"></i>`;
             lucide.createIcons();
 
             try {
+                console.log('📤 Sending login request to /api/auth/login');
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
+                console.log('📥 Response received:', response.status);
                 const data = await response.json();
+                console.log('📦 Response data:', data);
 
-                if (response.ok) {
+                if (response.ok && data.token) {
                     // Store token and user info (sessionStorage for tab-specific sessions)
                     sessionStorage.setItem('token', data.token);
                     sessionStorage.setItem('user', JSON.stringify(data.user));
 
-                    showToast('Success', 'Login successful!');
+                    showToast('Success', 'Login successful!', 'success');
+                    console.log('✅ Login successful, redirecting...');
 
                     setTimeout(() => {
                         if (data.user.role === 'faculty' || data.user.role === 'admin') {
@@ -665,12 +645,16 @@
                         }
                     }, 1000);
                 } else {
-                    showToast('Error', data.error || 'Login failed', true);
+                    console.error('❌ Login failed:', data.error);
+                    showToast('Error', data.error || 'Invalid credentials', 'error');
+                    btn.disabled = false;
                     btn.innerHTML = originalText;
                     lucide.createIcons();
                 }
             } catch (error) {
-                showToast('Error', 'Network error. Please try again.', true);
+                console.error('❌ Network error:', error);
+                showToast('Error', 'Cannot connect to server. Make sure backend is running.', 'error');
+                btn.disabled = false;
                 btn.innerHTML = originalText;
                 lucide.createIcons();
             }
@@ -827,6 +811,7 @@
             }
         }
     </script>
+    <script src="js/shared-ui.js"></script>
     <script src="js/welcome-enhancements.js"></script>
 </body>
 

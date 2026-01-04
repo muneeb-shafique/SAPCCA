@@ -112,9 +112,9 @@ def run_test():
         
         if (profile.get('name') == "Final Name" and 
             profile.get('avatar') == "https://example.com/final-avatar.jpg"):
-            print("\n✅ SUCCESS: Profile management is working correctly!")
+            print("\nSUCCESS: Profile management is working correctly!")
         else:
-            print("\n❌ FAILURE: Profile update verification failed")
+            print("\nFAILURE: Profile update verification failed")
     else:
         print(f"   ERROR: {resp.text}")
 

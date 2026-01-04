@@ -130,8 +130,8 @@
             if (el) el.textContent = currentUser.email || '';
         });
 
-        // Update all avatar elements
-        const avatarElements = document.querySelectorAll('#global-user-avatar, #sidebar-avatar, .user-avatar');
+        // Update all avatar elements (including sidebar, settings, and chat page avatars)
+        const avatarElements = document.querySelectorAll('#global-user-avatar, #sidebar-avatar, #avatar-preview, #chat-avatar, .user-avatar');
         avatarElements.forEach(el => {
             if (el) el.src = currentUser.avatar || getAvatar(currentUser.email);
         });
@@ -355,7 +355,7 @@
             // Recreate Lucide icons for file type icons
             lucide.createIcons();
 
-            container.scrollTop = container.scrollHeight;
+            // Auto-scroll removed per user request - chat stays at current position
         } catch (error) {
             console.error('Failed to load chat history:', error);
         }
@@ -862,23 +862,52 @@
 
         if (!saveBtn) return;
 
-        saveBtn.onclick = async () => {
+        // Clone the button to remove all existing event listeners
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+
+        newSaveBtn.onclick = async () => {
             const nameInput = document.getElementById('input-username');
+            const avatarPreview = document.getElementById('avatar-preview');
 
             if (!nameInput) return;
 
+            // Prevent double-clicking
+            if (newSaveBtn.disabled) return;
+            newSaveBtn.disabled = true;
+            const originalHTML = newSaveBtn.innerHTML;
+            newSaveBtn.innerHTML = `<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Processing...`;
+            lucide.createIcons();
+
             try {
+                const updateData = {
+                    name: nameInput.value
+                };
+
+                // Include avatar if it's been changed (not the default robohash)
+                if (avatarPreview && avatarPreview.src && !avatarPreview.src.includes('robohash.org')) {
+                    updateData.avatar = avatarPreview.src;
+                }
+
                 await apiRequest('/api/profile/update', {
                     method: 'POST',
-                    body: JSON.stringify({
-                        name: nameInput.value
-                    })
+                    body: JSON.stringify(updateData)
                 });
 
                 showToast('Success', 'Profile updated successfully');
                 await loadUserProfile();
+
+                // Hide the save bar
+                const saveBar = document.getElementById('save-bar');
+                if (saveBar) saveBar.classList.add('hidden-bar');
+
             } catch (error) {
                 console.error('Failed to update profile:', error);
+                showToast('Error', 'Failed to update profile');
+            } finally {
+                newSaveBtn.disabled = false;
+                newSaveBtn.innerHTML = originalHTML;
+                lucide.createIcons();
             }
         };
     }

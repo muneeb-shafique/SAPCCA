@@ -125,3 +125,15 @@ class AssignmentSubmission(db.Model):
     feedback = db.Column(db.Text)  # Teacher feedback
     graded_at = db.Column(db.DateTime)
     graded_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+class CallLog(db.Model):
+    """Represents a call record between two users"""
+    id = db.Column(db.Integer, primary_key=True)
+    caller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    call_type = db.Column(db.String(20))  # 'outgoing', 'incoming'
+    call_status = db.Column(db.String(20))  # 'answered', 'missed', 'rejected', 'cancelled'
+    started_at = db.Column(db.DateTime, default=datetime.utcnow)
+    ended_at = db.Column(db.DateTime, nullable=True)
+    duration = db.Column(db.Integer, nullable=True)  # in seconds
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)

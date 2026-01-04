@@ -9,3 +9,10 @@ eventlet
 werkzeug
 gunicorn
 psycopg2-binary
+matplotlib
+pandas
+reportlab
+torch
+transformers
+pillow
+numpy
