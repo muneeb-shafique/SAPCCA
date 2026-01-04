@@ -75,10 +75,12 @@ def create_app():
     def serve_static(filename):
         return send_from_directory(frontend_dir, filename)
 
+    # Init socketio with app
+    socketio.init_app(app)
+
     return app
 
 
 if __name__ == "__main__":
     app = create_app()
-    socketio.init_app(app)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
