@@ -1,7 +1,7 @@
 // API Base URL Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
     ? 'http://localhost:5000'
-    : 'https://your-backend-url.com';
+    : window.location.origin; // Automatically use the current domain (e.g. Railway URL)
 
 console.log('[API CONFIG] Base URL:', API_BASE_URL);
 

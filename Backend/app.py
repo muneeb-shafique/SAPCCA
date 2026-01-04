@@ -7,7 +7,15 @@ from config import Config
 import os
 
 # socket server
-socketio = SocketIO(cors_allowed_origins="*", max_http_buffer_size=5 * 1024 * 1024)
+# socket server
+# Force eventlet for Railway deployment
+socketio = SocketIO(
+    cors_allowed_origins="*", 
+    max_http_buffer_size=5 * 1024 * 1024,
+    async_mode='eventlet',
+    logger=True,
+    engineio_logger=True
+)
 
 def create_app():
     app = Flask(__name__)
