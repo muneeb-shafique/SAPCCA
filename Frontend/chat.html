@@ -2193,13 +2193,43 @@ faculty@example.com"></textarea>
         let isMuted = false;
         let isCameraOn = true;
 
-        // STUN servers for NAT traversal
+        // STUN servers for NAT traversal (Enhanced list)
         const iceServers = {
             iceServers: [
                 { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
+                { urls: 'stun:stun1.l.google.com:19302' },
+                { urls: 'stun:stun2.l.google.com:19302' },
+                { urls: 'stun:stun3.l.google.com:19302' },
+                { urls: 'stun:stun4.l.google.com:19302' },
+                { urls: 'stun:stun.rnktel.com' },
+                { urls: 'stun:stun.ekiga.net' },
+                { urls: 'stun:stun.schlund.de' },
+                { urls: 'stun:stun.voipstunt.com' }
             ]
         };
+        
+        // Debug Socket Connection for Railway
+        if (socket) {
+            socket.on('connect_error', (err) => {
+                console.error('[SOCKET] Connection Error:', err);
+            });
+            
+            socket.on('disconnect', (reason) => {
+                console.warn('[SOCKET] Disconnected:', reason);
+                if (reason === 'io server disconnect') {
+                    socket.connect();
+                }
+            });
+            
+            socket.on('reconnect', (attemptNumber) => {
+                console.log('[SOCKET] Reconnected after', attemptNumber, 'attempts');
+                const userData = JSON.parse(sessionStorage.getItem('user') || '{}');
+                if (userData.id) {
+                    console.log('[SOCKET] Re-joining room:', userData.id);
+                    socket.emit('join_room', { room: String(userData.id) });
+                }
+            });
+        }
 
         // Modal Elements - initialize after DOM is ready
         let incomingCallModal, outgoingCallModal, activeCallModal, remoteAudio;
